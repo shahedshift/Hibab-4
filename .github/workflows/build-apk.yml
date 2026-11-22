@@ -27,7 +27,7 @@ jobs:
       - name: Install Capacitor & Plugins
         run: |
           npm install
-          npx cap init "Mosque Accounting" "com.mosque.accounting" --web-dir=www
+          npx cap init "Mosque Accounting" "com.baytunnajat.mosque" --web-dir=www
           npx cap add android
           npx cap sync android
 
