@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>মসজিদ হিসাবরক্ষণ ও লেজার সিস্টেম</title>
+    <title>বায়তুন নাজাত জামে মসজিদ - হিসাবরক্ষণ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS for Real Excel (.xlsx) Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -34,7 +34,7 @@
     <!-- Top Header -->
     <header class="bg-emerald-800 text-white p-4 sticky top-0 z-30 shadow-md no-print flex justify-between items-center">
         <div>
-            <h1 class="text-lg font-bold leading-tight" id="header-mosque-name">বায়তুল আমান জামে মসজিদ</h1>
+            <h1 class="text-lg font-bold leading-tight" id="header-mosque-name">বায়তুন নাজাত জামে মসজিদ</h1>
             <p class="text-xs text-emerald-200">অফলাইন হিসাব ও লেজার ব্যবস্থাপনা</p>
         </div>
         <button onclick="openMosqueModal()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-600">
@@ -389,7 +389,7 @@
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                 <h2 class="text-sm font-bold text-gray-700 border-b pb-2">সরাসরি ফোনে Excel ও ব্যাকআপ ডাউনলোড</h2>
                 <p class="text-xs text-gray-600 leading-relaxed">
-                    আপনার সব হিসাব ফোনের অফলাইন মেমোরিতে সেভ আছে। নিচের বাটনে চাপ দিলে ফাইলটি সরাসরি আপনার ফোনের <strong>Downloads</strong> ফোল্ডারে সেভ হবে, যা আপনি পরবর্তীতে Gmail বা Google Drive-এ সংরক্ষণ করতে পারবেন।
+                    আপনার সব হিসাব ফোনের অফলাইন মেমোরিতে সেভ আছে। নিচের বাটনে চাপ দিলে ফাইলটি সরাসরি আপনার ফোনের <strong>Documents</strong> ফোল্ডারে সেভ হবে এবং সাথে সাথে শেয়ার বা ওপেন করার অপশন চালু হবে।
                 </p>
                 
                 <button onclick="exportToRealExcel()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm">
@@ -484,13 +484,13 @@
 
     <script>
         // ==================== DATA STORE & INITIALIZATION ====================
-        const STORAGE_KEY = 'mosque_accounting_v2';
+        const STORAGE_KEY = 'baytun_najat_mosque_v1';
         const bnMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
         let db = {
             settings: {
-                mosqueName: 'বায়তুল আমান জামে মসজিদ',
-                address: 'হাটহাজারী, চট্টগ্রাম',
+                mosqueName: 'বায়তুন নাজাত জামে মসজিদ',
+                address: 'বাংলাদেশ',
                 openingCash: 0,
                 openingBank: 0
             },
@@ -532,21 +532,48 @@
             return new Date().toISOString().split('T')[0];
         }
 
-        function triggerMobileDownload(blob, filename) {
+        // Native APK + Browser Universal File Downloader
+        async function triggerMobileDownload(blob, filename) {
             const reader = new FileReader();
-            reader.onloadend = function() {
-                const a = document.createElement('a');
-                a.href = reader.result;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                }, 300);
+            reader.onloadend = async function() {
+                const base64Data = reader.result.split(',')[1];
+                
+                if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+                    try {
+                        const { Filesystem } = window.Capacitor.Plugins;
+                        const { Share } = window.Capacitor.Plugins;
+
+                        const savedFile = await Filesystem.writeFile({
+                            path: filename,
+                            data: base64Data,
+                            directory: 'DOCUMENTS'
+                        });
+
+                        alert(`ফাইলটি ফোনের Documents ফোল্ডারে সেভ হয়েছে:\n${filename}`);
+
+                        if (Share) {
+                            await Share.share({
+                                title: filename,
+                                url: savedFile.uri,
+                                dialogTitle: 'ফাইলটি ওপেন বা শেয়ার করুন'
+                            });
+                        }
+                    } catch (err) {
+                        alert('ফাইল সেভ করতে সমস্যা হয়েছে: ' + err.message);
+                    }
+                } else {
+                    const a = document.createElement('a');
+                    a.href = reader.result;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => document.body.removeChild(a), 300);
+                }
             };
             reader.readAsDataURL(blob);
         }
 
+        // ==================== INITIAL SETUP ON LOAD ====================
         window.onload = function() {
             loadDB();
             document.getElementById('header-mosque-name').innerText = db.settings.mosqueName;
@@ -608,6 +635,7 @@
             }
         }
 
+        // ==================== NAVIGATION ====================
         function switchMainTab(tab) {
             ['dashboard', 'receipts', 'transactions', 'ledger', 'backup'].forEach(t => {
                 document.getElementById('tab-' + t).classList.add('hidden');
@@ -654,6 +682,7 @@
             if (sub === 'yearly') renderYearlyStatement();
         }
 
+        // ==================== RECEIPT BOOKS & BATCH ENTRY ====================
         function addNewReceiptBook() {
             const bookNo = document.getElementById('new-book-no').value.trim();
             const categoryId = document.getElementById('new-book-category').value;
@@ -868,6 +897,7 @@
             `).join('');
         }
 
+        // ==================== DIRECT INCOME, EXPENSE & BANK ====================
         function saveDirectIncome() {
             const date = document.getElementById('inc-date').value;
             const categoryId = document.getElementById('inc-category').value;
@@ -966,6 +996,7 @@
             alert('নতুন খাত যুক্ত হয়েছে!');
         }
 
+        // ==================== MONTHLY CALCULATIONS & DASHBOARD ====================
         function getMonthlyMetrics(year, month) {
             const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
             const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-31`;
@@ -1146,6 +1177,7 @@
             `).join('');
         }
 
+        // ==================== EDIT MODAL LOGIC ====================
         function openEditModal(kind, id) {
             currentEditTarget = { kind, id };
             const body = document.getElementById('edit-modal-body');
@@ -1245,6 +1277,7 @@
             renderCategoryLedger();
         }
 
+        // ==================== LEDGER & YEARLY STATEMENT ====================
         function renderCategoryLedger() {
             const catId = document.getElementById('ledger-cat-select').value;
             const year = document.getElementById('ledger-year-select').value;
@@ -1332,6 +1365,7 @@
             `;
         }
 
+        // ==================== SETTINGS MODAL ====================
         function openMosqueModal() {
             document.getElementById('set-mosque-name').value = db.settings.mosqueName;
             document.getElementById('set-mosque-address').value = db.settings.address;
@@ -1345,7 +1379,7 @@
         }
 
         function saveMosqueSettings() {
-            db.settings.mosqueName = document.getElementById('set-mosque-name').value.trim() || 'মসজিদ হিসাব';
+            db.settings.mosqueName = document.getElementById('set-mosque-name').value.trim() || 'বায়তুন নাজাত জামে মসজিদ';
             db.settings.address = document.getElementById('set-mosque-address').value.trim();
             db.settings.openingCash = parseFloat(document.getElementById('set-open-cash').value) || 0;
             db.settings.openingBank = parseFloat(document.getElementById('set-open-bank').value) || 0;
@@ -1355,6 +1389,7 @@
             renderDashboard();
         }
 
+        // ==================== REAL EXCEL (.XLSX) & JSON BACKUP FOR APK ====================
         function exportToRealExcel() {
             if (typeof XLSX === 'undefined') {
                 alert('Excel লাইব্রেরি লোড হয়নি। প্রথমবার ইন্টারনেট সংযোগ রেখে অ্যাপটি ওপেন করুন।');
@@ -1401,12 +1436,12 @@
 
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
             const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            triggerMobileDownload(blob, `Mosque_Account_${todayISO()}.xlsx`);
+            triggerMobileDownload(blob, `Baytun_Najat_Account_${todayISO()}.xlsx`);
         }
 
         function exportFullJSON() {
             const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-            triggerMobileDownload(blob, `Mosque_Backup_${todayISO()}.json`);
+            triggerMobileDownload(blob, `Baytun_Najat_Backup_${todayISO()}.json`);
         }
 
         function importFullJSON(event) {
@@ -1432,6 +1467,7 @@
             reader.readAsText(file);
         }
 
+        // ==================== DIRECT PDF DOWNLOAD (BANGLA FONT SAFE FOR APK) ====================
         function downloadMonthlyPDF() {
             const btn = document.getElementById('btn-download-pdf');
             const origText = btn.innerHTML;
@@ -1523,7 +1559,7 @@
                 </table>
             `;
 
-            const filename = `Mosque_Report_${year}_${month + 1}.pdf`;
+            const filename = `Baytun_Najat_Report_${year}_${month + 1}.pdf`;
 
             if (typeof html2pdf !== 'undefined') {
                 const opt = {
@@ -1534,8 +1570,8 @@
                     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                 };
 
-                html2pdf().set(opt).from(printArea).outputPdf('blob').then(function(pdfBlob) {
-                    triggerMobileDownload(pdfBlob, filename);
+                html2pdf().set(opt).from(printArea).outputPdf('blob').then(async function(pdfBlob) {
+                    await triggerMobileDownload(pdfBlob, filename);
                     btn.innerHTML = origText;
                     btn.disabled = false;
                 }).catch(function() {
