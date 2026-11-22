@@ -39,6 +39,12 @@
         </div>
         <button onclick="openMosqueModal()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-600">
             ⚙️ সেটিংস
+            <div class="pt-3 border-t flex items-center justify-between">
+                <span class="text-xs text-gray-500">বর্তমান ভার্সন: <strong id="app-current-ver">v1.0</strong></span>
+                <button onclick="checkForAppUpdate()" id="btn-check-update" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1">
+                    🔄 Check for Update
+                </button>
+            </div>
         </button>
     </header>
 
@@ -1581,6 +1587,45 @@
                 });
             } else {
                 window.print();
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+
+        // ==================== IN-APP GITHUB UPDATE CHECKER ====================
+        const GITHUB_REPO = 'shahedshift/Hibab-4';
+        const CURRENT_APP_VERSION = 'v1.0.1'; // নতুন ভার্সন আপলোড করলে চাইলে এটি বাড়াতে পারেন
+
+        async function checkForAppUpdate() {
+            const btn = document.getElementById('btn-check-update');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '⏳ চেক হচ্ছে...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+                    cache: 'no-store'
+                });
+                if (!res.ok) {
+                    throw new Error('কোনো রিলিজ পাওয়া যায়নি।');
+                }
+                const data = await res.json();
+                const latestTag = data.tag_name;
+                const apkAsset = data.assets.find(a => a.name.endsWith('.apk'));
+
+                if (!apkAsset) {
+                    alert('সর্বশেষ রিলিজে কোনো APK ফাইল পাওয়া যায়নি।');
+                } else if (latestTag !== CURRENT_APP_VERSION) {
+                    const confirmDownload = confirm(`নতুন আপডেট পাওয়া গেছে (${latestTag})!\nআপনি কি এখনই নতুন APK ডাউনলোড করতে চান?`);
+                    if (confirmDownload) {
+                        window.open(apkAsset.browser_download_url, '_system');
+                    }
+                } else {
+                    alert(`আপনি সর্বশেষ ভার্সন (${CURRENT_APP_VERSION}) ব্যবহার করছেন।`);
+                }
+            } catch (err) {
+                alert('আপডেট চেক করা সম্ভব হয়নি। আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন।');
+            } finally {
                 btn.innerHTML = origText;
                 btn.disabled = false;
             }
