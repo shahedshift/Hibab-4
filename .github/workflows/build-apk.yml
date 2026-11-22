@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,6 +27,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Fixed Android Keystore
+        id: cache-keystore
+        uses: actions/cache@v4
+        with:
+          path: release-key.jks
+          key: baytun-najat-fixed-keystore-v1
+
+      - name: Generate Fixed Keystore (If Not Cached)
+        if: steps.cache-keystore.outputs.cache-hit != 'true'
+        run: |
+          keytool -genkey -v -keystore release-key.jks -alias baytunnajat -keyalg RSA -keysize 2048 -validity 10000 -storepass 123456 -keypass 123456 -dname "CN=Baytun Najat Mosque, OU=IT, O=Mosque, L=Chittagong, ST=CTG, C=BD"
+
       - name: Install Capacitor & Plugins
         run: |
           npm install
@@ -31,18 +46,23 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Add Storage Permissions to AndroidManifest
+      - name: Configure Permissions & Auto VersionCode
         run: |
           sed -i 's/<application/<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" \/>\n<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" \/>\n<application android:usesCleartextTraffic="true"/g' android/app/src/main/AndroidManifest.xml
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/g" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/g" android/app/build.gradle
 
-      - name: Build Debug APK
+      - name: Build Signed Release APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)/zipalign -v -p 4 app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/app-aligned.apk
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)/apksigner sign --ks ../release-key.jks --ks-pass pass:123456 --key-pass pass:123456 --out app/build/outputs/apk/release/Baytun-Najat-Mosque.apk app/build/outputs/apk/release/app-aligned.apk
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: Mosque-Accounting-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          files: android/app/build/outputs/apk/release/Baytun-Najat-Mosque.apk
