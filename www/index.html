@@ -29,21 +29,19 @@
 </head>
 <body class="text-gray-800">
 
-    <!-- Top Header -->
+    <!-- Top Header (Clean without redundant top settings button since Settings is in bottom nav) -->
     <header class="bg-emerald-800 text-white p-4 sticky top-0 z-30 shadow-md no-print flex justify-between items-center">
         <div>
             <h1 class="text-lg font-bold leading-tight" id="header-mosque-name">বায়তুন নাজাত জামে মসজিদ</h1>
             <p class="text-xs text-emerald-200">অফলাইন হিসাব ও লেজার ব্যবস্থাপনা</p>
         </div>
-        <button onclick="openMosqueModal()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-600">
-            ⚙️ সেটিংস
-        </button>
+        <span class="text-[11px] bg-emerald-700/80 px-2.5 py-1 rounded-lg border border-emerald-600 font-semibold">v1.6.0</span>
     </header>
 
     <!-- Main Content Container -->
     <main class="max-w-xl mx-auto p-3 space-y-4 no-print">
 
-        <!-- ==================== TAB 1: DASHBOARD ==================== -->
+        <!-- ==================== TAB 1: DASHBOARD (হোম হিসাব) ==================== -->
         <section id="tab-dashboard" class="space-y-4">
             <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between gap-2">
                 <div class="flex gap-2 flex-1">
@@ -153,15 +151,7 @@
                     <div id="dash-book-voucher-summary" class="pt-3 space-y-3 text-xs"></div>
                 </div>
             </div>
-
-            <!-- Transactions List -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex justify-between items-center border-b pb-2 mb-3">
-                    <h3 class="text-sm font-bold text-gray-700">এই মাসের লেনদেন সমূহ</h3>
-                    <span class="text-[11px] text-gray-400">সংশোধনের জন্য কোনায় Edit চাপুন</span>
-                </div>
-                <div id="dash-tx-list" class="space-y-2.5"></div>
-            </div>
+            <!-- Note: "এই মাসের লেনদেন সমূহ" removed from Home screen per user instruction -->
         </section>
 
         <!-- ==================== TAB 2: INCOME / EXPENSE / CASH-BANK ==================== -->
@@ -172,29 +162,47 @@
                 <button onclick="switchTxSub('bank')" id="tsub-btn-bank" class="py-2 rounded-lg text-gray-600">ক্যাশ - ব্যাংক</button>
             </div>
 
-            <!-- Sub 1: Direct Income (With 1-Row 3 Combo Boxes + 12-Month Calendar Grid + Average Calculation) -->
+            <!-- Sub 1: Direct Income (তারিখ -> রশিদ নাম্বার -> বই নাম্বার -> আয়ের খাত + No extra confirmation bars) -->
             <div id="tsub-income" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
-                <h2 class="text-sm font-bold text-emerald-800 border-b pb-2">সরাসরি আয় এন্ট্রি (রশিদ নং দিলে বই ও খাত অটো দেখাবে)</h2>
+                <h2 class="text-sm font-bold text-emerald-800 border-b pb-2">সরাসরি আয় এন্ট্রি</h2>
+
+                <!-- Row 1: তারিখ | রশিদ নাম্বার (Combo: Type or Dropdown from selected Book) -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">তারিখ</label>
                         <input type="date" id="inc-date" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">রশিদ নং</label>
-                        <input type="text" inputmode="numeric" id="inc-receipt-no" oninput="handleDirectReceiptLookup()" placeholder="যেমন: 1005" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-bold">
+                    <div class="relative">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">রশিদ নাম্বার</label>
+                        <input type="text" inputmode="numeric" id="inc-receipt-no"
+                            onfocus="openReceiptComboDropdown()"
+                            oninput="onDirectReceiptInput()"
+                            placeholder="রশিদ নং লিখুন"
+                            autocomplete="off"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm font-bold">
+                        <div id="dropdown-inc-receipt" class="hidden absolute right-0 top-full mt-1 w-56 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-xl z-40 text-xs"></div>
                     </div>
                 </div>
 
-                <!-- Auto-detected Book & Duplicate Alert Banner -->
-                <div id="inc-receipt-lookup-box" class="hidden p-2.5 rounded-lg text-xs border"></div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">আয়ের খাত</label>
-                    <select id="inc-category" onchange="handleIncomeCategoryChange()" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white font-semibold"></select>
+                <!-- Row 2: বই নাম্বার (Combo: Type or Dropdown filtered by Category) | আয়ের খাত -->
+                <div class="grid grid-cols-12 gap-2">
+                    <div class="col-span-5 relative">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">বই নাম্বার</label>
+                        <input type="text" inputmode="numeric" id="inc-book-no"
+                            onfocus="openBookComboDropdown()"
+                            oninput="onDirectBookInput()"
+                            placeholder="বই নং"
+                            autocomplete="off"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm font-bold bg-white">
+                        <div id="dropdown-inc-book" class="hidden absolute left-0 top-full mt-1 w-56 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-xl z-40 text-xs"></div>
+                    </div>
+                    <div class="col-span-7">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">আয়ের খাত</label>
+                        <select id="inc-category" onchange="handleIncomeCategoryChange()" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white font-semibold"></select>
+                    </div>
                 </div>
 
-                <!-- Monthly Chanda Specific Section: Single Row 3 Combo Boxes + 12-Month Calendar Tick Grid -->
+                <!-- Monthly Chanda Specific Section: Single Row 3 Combo Boxes (No confirmation bar below) + 12-Month Calendar with Paid Lock -->
                 <div id="monthly-chanda-box" class="hidden bg-emerald-50/80 border border-emerald-300 p-3 rounded-xl space-y-3">
                     <div class="flex justify-between items-center border-b border-emerald-200 pb-1.5">
                         <span class="text-xs font-bold text-emerald-900">📋 মাসিক চাঁদার সদস্য ও ক্যালেন্ডার বিবরণ</span>
@@ -239,18 +247,14 @@
 
                     <input type="hidden" id="inc-selected-member-id">
                     <input type="hidden" id="inc-selected-bari-filter">
-                    <div id="selected-member-banner" class="hidden bg-emerald-800 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold flex justify-between items-center">
-                        <span id="selected-member-text"></span>
-                        <button type="button" onclick="clearSelectedChandaMember()" class="text-emerald-200 hover:text-white font-bold ml-2">✕</button>
-                    </div>
 
-                    <!-- Year & 12-Month Calendar Tick Grid -->
+                    <!-- Year & 12-Month Calendar Tick Grid (With Paid Lock) -->
                     <div class="bg-white p-2.5 rounded-lg border border-emerald-200 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-[11px] font-bold text-gray-700">মাস নির্বাচন করুন (টিক দিন):</span>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[11px] text-gray-500">সাল:</span>
-                                <select id="inc-chanda-year" class="border border-gray-300 rounded px-2 py-0.5 text-xs font-bold bg-gray-50"></select>
+                                <select id="inc-chanda-year" onchange="renderChandaMonthsGrid()" class="border border-gray-300 rounded px-2 py-0.5 text-xs font-bold bg-gray-50"></select>
                             </div>
                         </div>
 
@@ -290,7 +294,7 @@
                 </button>
             </div>
 
-            <!-- Sub 2: Expense Voucher (Separate Honorarium categories + Direct Auto-Fill inside box, no chips below) -->
+            <!-- Sub 2: Expense Voucher (Separate Honorarium categories + Direct Auto-Fill inside box + Month/Year selection + Advance) -->
             <div id="tsub-expense" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-rose-800">ব্যয় ভাউচার এন্ট্রি (সম্মানী, বিল ও খরচ)</h2>
@@ -311,6 +315,31 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">ব্যয়ের খাত</label>
                     <select id="exp-category" onchange="autoFillLastRecipientName()" class="w-full border border-gray-300 rounded-lg p-2 text-sm bg-white font-semibold"></select>
+                </div>
+                <!-- Target Month & Year for Monthly Expenses (Imam, Muazzin, Khatib, Electricity Bill, etc.) -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">কোন মাসের হিসাব</label>
+                        <select id="exp-target-month" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50">
+                            <option value="">প্রযোজ্য নয় (এককালীন)</option>
+                            <option value="0">জানুয়ারি</option>
+                            <option value="1">ফেব্রুয়ারি</option>
+                            <option value="2">মার্চ</option>
+                            <option value="3">এপ্রিল</option>
+                            <option value="4">মে</option>
+                            <option value="5">জুন</option>
+                            <option value="6">জুলাই</option>
+                            <option value="7">আগস্ট</option>
+                            <option value="8">সেপ্টেম্বর</option>
+                            <option value="9">অক্টোবর</option>
+                            <option value="10">নভেম্বর</option>
+                            <option value="11">ডিসেম্বর</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">বছর</label>
+                        <select id="exp-target-year" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-bold bg-gray-50"></select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -338,7 +367,7 @@
                 </button>
             </div>
 
-            <!-- Sub 3: Cash - Bank Contra (Exact sequence: তারিখ -> লেনদেনের ধরন -> ব্যাংকের নাম -> টাকা -> রিসিট নাম্বার + Common Save Button) -->
+            <!-- Sub 3: Cash - Bank Contra -->
             <div id="tsub-bank" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                 <h2 class="text-sm font-bold text-indigo-800 border-b pb-2">ক্যাশ ও ব্যাংক লেনদেন</h2>
                 <div>
@@ -371,7 +400,7 @@
             </div>
         </section>
 
-        <!-- ==================== TAB 3: ROUGH NOTES (ব্যয় সেকশন + আয় সেকশন + নরমাল নোট [ছবি ও ভয়েস]) ==================== -->
+        <!-- ==================== TAB 3: ROUGH NOTES (ব্যয় সেকশন + আয় সেকশন + নরমাল নোট) ==================== -->
         <section id="tab-roughnotes" class="hidden space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -382,14 +411,12 @@
                     <span class="text-xs bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold" id="rn-total-badge">০ টি</span>
                 </div>
 
-                <!-- Top 2 Sections: ব্যয় সেকশন & আয় সেকশন + নরমাল নোট -->
                 <div class="grid grid-cols-3 bg-gray-100 p-1 rounded-xl text-xs font-bold gap-1">
                     <button type="button" onclick="setRoughNoteType('expense')" id="rn-type-btn-expense" class="py-2 rounded-lg bg-rose-700 text-white shadow-sm">💸 ব্যয় সেকশন</button>
                     <button type="button" onclick="setRoughNoteType('income')" id="rn-type-btn-income" class="py-2 rounded-lg text-gray-700">💰 আয় সেকশন</button>
                     <button type="button" onclick="setRoughNoteType('normal')" id="rn-type-btn-normal" class="py-2 rounded-lg text-gray-700">🗒️ নরমাল নোট</button>
                 </div>
 
-                <!-- Structured Form for ব্যয় সেকশন & আয় সেকশন -->
                 <div id="rn-structured-form" class="space-y-2.5">
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -425,12 +452,10 @@
                     </div>
                 </div>
 
-                <!-- Plain Notepad Style for নরমাল নোট (Google Keep style: just free text + optional photo/voice) -->
                 <div id="rn-notepad-form" class="hidden space-y-2">
                     <textarea id="rn-notepad-text" rows="4" placeholder="এখানে নোটপ্যাডের মতো যা খুশি লিখুন..." class="w-full border border-amber-300 rounded-xl p-3 text-sm bg-amber-50/40 focus:outline-none focus:border-amber-600"></textarea>
                 </div>
 
-                <!-- Photo & Voice Attachment Controls (Available for all notes) -->
                 <div class="grid grid-cols-2 gap-2 pt-1">
                     <label class="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 py-2 px-2 rounded-lg text-xs font-bold cursor-pointer">
                         <span>📷 ছবি যুক্ত করুন</span>
@@ -448,27 +473,29 @@
                 </button>
             </div>
 
-            <!-- Saved Rough Notes List -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-2.5">
                 <h3 class="text-sm font-bold text-gray-700 border-b pb-2">সংরক্ষিত রাফ নোট সমূহ</h3>
                 <div id="rough-notes-list-container" class="space-y-2.5"></div>
             </div>
         </section>
 
-        <!-- ==================== TAB 4: হিসাব বই / খাতাসমূহ (নগদান বই, রশিদ বই, ব্যাংক স্টেটমেন্ট, খাত লেজার) ==================== -->
+        <!-- ==================== TAB 4: হিসাব বই / খাতাসমূহ (নগদান বই, রশিদ বই, সদস্য ও সম্মানী, ব্যাংক/খাত) ==================== -->
         <section id="tab-ledger" class="hidden space-y-4">
-            <div class="grid grid-cols-4 bg-gray-200 p-1 rounded-xl text-[11px] font-bold">
+            <div class="grid grid-cols-4 bg-gray-200 p-1 rounded-xl text-[10.5px] font-bold">
                 <button onclick="switchLedgerSub('cashbook')" id="lsub-btn-cashbook" class="py-2 rounded-lg bg-white text-emerald-800 shadow-sm">নগদান বই</button>
                 <button onclick="switchLedgerSub('receiptbooks')" id="lsub-btn-receiptbooks" class="py-2 rounded-lg text-gray-600">রশিদ বই</button>
-                <button onclick="switchLedgerSub('statement')" id="lsub-btn-statement" class="py-2 rounded-lg text-gray-600">ব্যাংক খাতা</button>
-                <button onclick="switchLedgerSub('category')" id="lsub-btn-category" class="py-2 rounded-lg text-gray-600">খাত ও বছর</button>
+                <button onclick="switchLedgerSub('registers')" id="lsub-btn-registers" class="py-2 rounded-lg text-gray-600">চাঁদা ও সম্মানী</button>
+                <button onclick="switchLedgerSub('statement')" id="lsub-btn-statement" class="py-2 rounded-lg text-gray-600">ব্যাংক/খাত</button>
             </div>
 
-            <!-- Book 1: নগদান বই (Cash Book) -->
+            <!-- Book 1: নগদান বই (Dual Cash & Bank Columns matching নগদান_বই.xlsx + Edit buttons!) -->
             <div id="lsub-cashbook" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
-                    <h2 class="text-sm font-bold text-emerald-900">📒 নগদান বই (Cash Book)</h2>
-                    <button onclick="downloadCashBookPDF()" id="btn-cb-pdf" class="bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold">
+                    <div>
+                        <h2 class="text-sm font-bold text-emerald-900">📒 নগদান বই (Cash & Bank Book)</h2>
+                        <p class="text-[10px] text-gray-500">ক্যাশ ও ব্যাংক আলাদা কলামে; জের স্বয়ংক্রিয়ভাবে হিসাব হয়</p>
+                    </div>
+                    <button onclick="downloadCashBookPDF()" id="btn-cb-pdf" class="bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
                         📥 PDF সেভ
                     </button>
                 </div>
@@ -489,33 +516,33 @@
                     </select>
                     <select id="cb-year" onchange="renderCashBook()" class="border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50"></select>
                 </div>
-                <div class="bg-slate-800 text-white p-3 rounded-xl grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                        <span class="text-slate-300 block text-[11px]">প্রারম্ভিক নগদ জের</span>
-                        <strong class="text-sm text-amber-300" id="cb-opening">৳ ০</strong>
+
+                <!-- Dual Cash & Bank Summary Cards -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-slate-800 text-white p-2.5 rounded-xl">
+                        <span class="text-slate-300 block text-[10.5px]">বর্তমান হাতে নগদ (ক্যাশ)</span>
+                        <strong class="text-base text-emerald-400" id="cb-closing-cash">৳ ০</strong>
                     </div>
-                    <div class="text-right">
-                        <span class="text-slate-300 block text-[11px]">সমাপনী হাতে নগদ</span>
-                        <strong class="text-sm text-emerald-400" id="cb-closing">৳ ০</strong>
-                    </div>
-                    <div class="border-t border-slate-700 pt-1.5">
-                        <span class="text-slate-400">নগদ জমা (+): </span>
-                        <strong class="text-emerald-300" id="cb-total-cr">৳ ০</strong>
-                    </div>
-                    <div class="border-t border-slate-700 pt-1.5 text-right">
-                        <span class="text-slate-400">নগদ খরচ (-): </span>
-                        <strong class="text-rose-300" id="cb-total-dr">৳ ০</strong>
+                    <div class="bg-indigo-900 text-white p-2.5 rounded-xl">
+                        <span class="text-indigo-200 block text-[10.5px]">বর্তমান ব্যাংক জমা</span>
+                        <strong class="text-base text-amber-300" id="cb-closing-bank">৳ ০</strong>
                     </div>
                 </div>
-                <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                    <table class="w-full text-[11px] text-left border-collapse">
+
+                <!-- 8-Column Cash & Bank Book Table (Matching নগদান_বই.xlsx + Edit Action) -->
+                <div class="overflow-x-auto border border-gray-300 rounded-lg">
+                    <table class="w-full text-[10.5px] text-left border-collapse min-w-[680px]">
                         <thead>
-                            <tr class="bg-gray-100 text-gray-700 border-b border-gray-300">
-                                <th class="p-2 border-r">তারিখ</th>
-                                <th class="p-2 border-r">বিবরণ</th>
-                                <th class="p-2 border-r text-right text-emerald-700">নগদ জমা</th>
-                                <th class="p-2 border-r text-right text-rose-700">নগদ খরচ</th>
-                                <th class="p-2 text-right">নগদ স্থিতি</th>
+                            <tr class="bg-emerald-900 text-white border-b border-gray-400">
+                                <th class="p-1.5 border-r border-emerald-700 text-center w-10">ক্রমিক</th>
+                                <th class="p-1.5 border-r border-emerald-700">বিবরণ ও তারিখ</th>
+                                <th class="p-1.5 border-r border-emerald-700 text-right">ক্যাশ প্রাপ্তি</th>
+                                <th class="p-1.5 border-r border-emerald-700 text-right">ব্যাংক প্রাপ্তি</th>
+                                <th class="p-1.5 border-r border-emerald-700 text-right">ক্যাশ প্রদান</th>
+                                <th class="p-1.5 border-r border-emerald-700 text-right">ব্যাংক প্রদান</th>
+                                <th class="p-1.5 border-r border-emerald-700 text-right bg-slate-800">ক্যাশ জের</th>
+                                <th class="p-1.5 border-r border-emerald-700 text-right bg-indigo-950">ব্যাংক জের</th>
+                                <th class="p-1.5 text-center w-10">Edit</th>
                             </tr>
                         </thead>
                         <tbody id="cb-table-body"></tbody>
@@ -523,7 +550,7 @@
                 </div>
             </div>
 
-            <!-- Book 2: রশিদ বইসমূহ (Complete Receipt Books Hub: Entry, Add/Manage Books, Audit) -->
+            <!-- Book 2: রশিদ বইসমূহ -->
             <div id="lsub-receiptbooks" class="hidden space-y-3">
                 <div class="grid grid-cols-3 bg-emerald-100/80 p-1 rounded-xl text-xs font-bold">
                     <button type="button" onclick="switchReceiptBookInner('entry')" id="rbi-btn-entry" class="py-1.5 rounded-lg bg-emerald-800 text-white shadow-sm">রশিদ এন্ট্রি</button>
@@ -531,7 +558,6 @@
                     <button type="button" onclick="switchReceiptBookInner('audit')" id="rbi-btn-audit" class="py-1.5 rounded-lg text-emerald-950">বই যাচাই</button>
                 </div>
 
-                <!-- Inner 1: Receipt Page Entry -->
                 <div id="rbi-entry" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                     <h3 class="text-sm font-bold text-emerald-800 border-b pb-2">রশিদ বইয়ের পাতা অনুযায়ী আয় এন্ট্রি</h3>
                     <div>
@@ -571,7 +597,6 @@
                     </div>
                 </div>
 
-                <!-- Inner 2: Add & Edit Books -->
                 <div id="rbi-manage" class="hidden space-y-3">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                         <div class="flex justify-between items-center border-b pb-2">
@@ -649,7 +674,6 @@
                     </div>
                 </div>
 
-                <!-- Inner 3: Audit Book -->
                 <div id="rbi-audit" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                     <h3 class="text-sm font-bold text-gray-700 border-b pb-2">বইভিত্তিক মোট আদায় ও পাতা যাচাই</h3>
                     <select id="audit-book-select" onchange="renderBookAudit()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-semibold bg-gray-50"></select>
@@ -658,70 +682,171 @@
                 </div>
             </div>
 
-            <!-- Book 3: ব্যাংক খাতা / মাসিক স্টেটমেন্ট -->
-            <div id="lsub-statement" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h2 class="text-sm font-bold text-gray-700">🏦 ব্যাংক খাতা ও মাসিক স্টেটমেন্ট</h2>
-                    <button onclick="downloadStatementPDF()" id="btn-stmt-pdf" class="bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold">
-                        📥 PDF সেভ
-                    </button>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <select id="stmt-account" onchange="renderMonthlyStatement()" class="col-span-3 border border-gray-300 rounded-lg p-2 text-xs font-bold bg-indigo-50 text-indigo-950"></select>
-                    <select id="stmt-month" onchange="renderMonthlyStatement()" class="col-span-2 border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50">
-                        <option value="0">জানুয়ারি</option>
-                        <option value="1">ফেব্রুয়ারি</option>
-                        <option value="2">মার্চ</option>
-                        <option value="3">এপ্রিল</option>
-                        <option value="4">মে</option>
-                        <option value="5">জুন</option>
-                        <option value="6">জুলাই</option>
-                        <option value="7">আগস্ট</option>
-                        <option value="8">সেপ্টেম্বর</option>
-                        <option value="9">অক্টোবর</option>
-                        <option value="10">নভেম্বর</option>
-                        <option value="11">ডিসেম্বর</option>
-                    </select>
-                    <select id="stmt-year" onchange="renderMonthlyStatement()" class="border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50"></select>
+            <!-- Book 3: চাঁদা ও সম্মানী খাতা (Separate Dedicated Pages for চাঁদাদাতা, ইমাম, খতিব, মুয়াজ্জিন) -->
+            <div id="lsub-registers" class="hidden space-y-3">
+                <div class="grid grid-cols-4 bg-emerald-100/80 p-1 rounded-xl text-[11px] font-bold">
+                    <button type="button" onclick="switchRegisterInner('chanda_sheet')" id="reg-btn-chanda_sheet" class="py-1.5 rounded-lg bg-emerald-800 text-white shadow-sm">চাঁদাদাতা</button>
+                    <button type="button" onclick="switchRegisterInner('imam')" id="reg-btn-imam" class="py-1.5 rounded-lg text-emerald-950">ইমাম</button>
+                    <button type="button" onclick="switchRegisterInner('khatib')" id="reg-btn-khatib" class="py-1.5 rounded-lg text-emerald-950">খতিব</button>
+                    <button type="button" onclick="switchRegisterInner('muazzin')" id="reg-btn-muazzin" class="py-1.5 rounded-lg text-emerald-950">মুয়াজ্জিন</button>
                 </div>
 
-                <div class="bg-slate-800 text-white p-3 rounded-xl grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                        <span class="text-slate-300 block text-[11px]">প্রারম্ভিক জের (Opening)</span>
-                        <strong class="text-sm text-amber-300" id="stmt-opening">৳ ০</strong>
+                <!-- Inner A: ১৯৪ চাঁদাদাতার মাসিক চাঁদা শিট (Summary Table + Edit Member Fixed Rate + Export) -->
+                <div id="reg-chanda_sheet" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <div>
+                            <h3 class="text-sm font-bold text-emerald-900">📋 মাসিক চাঁদাদাতা আদায় তালিকা</h3>
+                            <p class="text-[10px] text-gray-500">কে কোন মাসে কত টাকা দিয়েছে (জানু - ডিসে)</p>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <select id="chanda-sheet-year" onchange="renderChandaSummarySheet()" class="border border-gray-300 rounded px-2 py-1 text-xs font-bold bg-gray-50"></select>
+                            <button type="button" onclick="exportChandaSheetExcel()" class="bg-emerald-700 text-white px-2.5 py-1 rounded text-[11px] font-bold">📥 Excel</button>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="text-slate-300 block text-[11px]">সমাপনী জের (Closing)</span>
-                        <strong class="text-sm text-emerald-400" id="stmt-closing">৳ ০</strong>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="chanda-sheet-search" oninput="renderChandaSummarySheet()" placeholder="নং (যেমন 1 বা ০১), নাম বা বাড়ী..." class="border border-gray-300 rounded-lg p-2 text-xs">
+                        <select id="chanda-sheet-bari" onchange="renderChandaSummarySheet()" class="border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50"></select>
                     </div>
-                    <div class="border-t border-slate-700 pt-1.5">
-                        <span class="text-slate-400">মোট জমা (Cr): </span>
-                        <strong class="text-emerald-300" id="stmt-total-cr">৳ ০</strong>
-                    </div>
-                    <div class="border-t border-slate-700 pt-1.5 text-right">
-                        <span class="text-slate-400">মোট খরচ (Dr): </span>
-                        <strong class="text-rose-300" id="stmt-total-dr">৳ ০</strong>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg max-h-[420px]">
+                        <table class="w-full text-[10.5px] text-left border-collapse min-w-[820px]">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-emerald-900 text-white">
+                                    <th class="p-1.5 border-r border-emerald-700">নং</th>
+                                    <th class="p-1.5 border-r border-emerald-700">নাম ও বাড়ী</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-right">ধার্য্য</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">জানু</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">ফেব্রু</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">মার্চ</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">এপ্রিল</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">মে</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">জুন</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">জুলাই</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">আগস্ট</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">সেপ্টে</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">অক্টো</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">নভে</th>
+                                    <th class="p-1.5 border-r border-emerald-700 text-center">ডিসে</th>
+                                    <th class="p-1.5 text-right bg-emerald-950">মোট আদায়</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chanda-sheet-tbody"></tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                    <table class="w-full text-[11px] text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100 text-gray-700 border-b border-gray-300">
-                                <th class="p-2 border-r">তারিখ</th>
-                                <th class="p-2 border-r">বিবরণ ও রশিদ/ভাউচার</th>
-                                <th class="p-2 border-r text-right text-emerald-700">জমা (+)</th>
-                                <th class="p-2 border-r text-right text-rose-700">খরচ (-)</th>
-                                <th class="p-2 text-right">স্থিতি (Balance)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stmt-table-body"></tbody>
-                    </table>
+                <!-- Inner B/C/D: Dedicated Honorarium & Advance Tracker for ইমাম, খতিব, মুয়াজ্জিন -->
+                <div id="reg-staff-panel" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <div>
+                            <h3 class="text-sm font-bold text-rose-900" id="staff-panel-title">ইমাম সাহেবের সম্মানী ও অগ্রিম খাতা</h3>
+                            <p class="text-[10.5px] text-gray-500" id="staff-panel-recipient">সর্বশেষ নাম: -</p>
+                        </div>
+                        <select id="staff-panel-year" onchange="renderCurrentStaffLedger()" class="border border-gray-300 rounded px-2 py-1 text-xs font-bold bg-gray-50"></select>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-center">
+                            <span class="text-[10px] text-emerald-700 block">নিয়মিত সম্মানী</span>
+                            <strong class="text-sm text-emerald-900" id="staff-total-regular">৳ ০</strong>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 p-2 rounded-lg text-center">
+                            <span class="text-[10px] text-amber-800 block">মোট অগ্রিম</span>
+                            <strong class="text-sm text-amber-950" id="staff-total-advance">৳ ০</strong>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 p-2 rounded-lg text-center">
+                            <span class="text-[10px] text-rose-700 block">সর্বমোট প্রদান</span>
+                            <strong class="text-sm text-rose-900" id="staff-total-all">৳ ০</strong>
+                        </div>
+                    </div>
+
+                    <!-- 12-Month Breakdown showing Regular vs Advance count & amounts per month -->
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="w-full text-[11px] text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 border-b">
+                                    <th class="p-2 border-r">মাস</th>
+                                    <th class="p-2 border-r text-right">সম্মানী</th>
+                                    <th class="p-2 border-r text-center">অগ্রিম (কয়বার ও টাকা)</th>
+                                    <th class="p-2 text-right">মোট পরিশোধ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staff-months-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="space-y-1.5 pt-1">
+                        <h4 class="text-xs font-bold text-gray-700">বিস্তারিত ভাউচার তালিকা:</h4>
+                        <div id="staff-tx-list" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Book 4: খাতভিত্তিক লেজার ও বাৎসরিক হিসাব -->
-            <div id="lsub-category" class="hidden space-y-4">
+            <!-- Book 4: ব্যাংক খাতা / স্টেটমেন্ট, খাত লেজার ও বাৎসরিক -->
+            <div id="lsub-statement" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h2 class="text-sm font-bold text-gray-700">🏦 ব্যাংক খাতা ও মাসিক স্টেটমেন্ট</h2>
+                        <button onclick="downloadStatementPDF()" id="btn-stmt-pdf" class="bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold">
+                            📥 PDF সেভ
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <select id="stmt-account" onchange="renderMonthlyStatement()" class="col-span-3 border border-gray-300 rounded-lg p-2 text-xs font-bold bg-indigo-50 text-indigo-950"></select>
+                        <select id="stmt-month" onchange="renderMonthlyStatement()" class="col-span-2 border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50">
+                            <option value="0">জানুয়ারি</option>
+                            <option value="1">ফেব্রুয়ারি</option>
+                            <option value="2">মার্চ</option>
+                            <option value="3">এপ্রিল</option>
+                            <option value="4">মে</option>
+                            <option value="5">জুন</option>
+                            <option value="6">জুলাই</option>
+                            <option value="7">আগস্ট</option>
+                            <option value="8">সেপ্টেম্বর</option>
+                            <option value="9">অক্টোবর</option>
+                            <option value="10">নভেম্বর</option>
+                            <option value="11">ডিসেম্বর</option>
+                        </select>
+                        <select id="stmt-year" onchange="renderMonthlyStatement()" class="border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-gray-50"></select>
+                    </div>
+
+                    <div class="bg-slate-800 text-white p-3 rounded-xl grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-slate-300 block text-[11px]">প্রারম্ভিক জের (Opening)</span>
+                            <strong class="text-sm text-amber-300" id="stmt-opening">৳ ০</strong>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-300 block text-[11px]">সমাপনী জের (Closing)</span>
+                            <strong class="text-sm text-emerald-400" id="stmt-closing">৳ ০</strong>
+                        </div>
+                        <div class="border-t border-slate-700 pt-1.5">
+                            <span class="text-slate-400">মোট জমা (Cr): </span>
+                            <strong class="text-emerald-300" id="stmt-total-cr">৳ ০</strong>
+                        </div>
+                        <div class="border-t border-slate-700 pt-1.5 text-right">
+                            <span class="text-slate-400">মোট খরচ (Dr): </span>
+                            <strong class="text-rose-300" id="stmt-total-dr">৳ ০</strong>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="w-full text-[11px] text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 border-b border-gray-300">
+                                    <th class="p-2 border-r">তারিখ</th>
+                                    <th class="p-2 border-r">বিবরণ ও রশিদ/ভাউচার</th>
+                                    <th class="p-2 border-r text-right text-emerald-700">জমা (+)</th>
+                                    <th class="p-2 border-r text-right text-rose-700">খরচ (-)</th>
+                                    <th class="p-2 border-r text-right">স্থিতি</th>
+                                    <th class="p-2 text-center">Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stmt-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
                     <h2 class="text-sm font-bold text-gray-700 border-b pb-2">খাতভিত্তিক লেজার ও বাৎসরিক ফলাফল</h2>
                     <div class="grid grid-cols-3 gap-2">
@@ -732,7 +857,7 @@
                         <span>নির্বাচিত খাতে পুরো বছরের মোট:</span>
                         <strong id="ledger-total-val" class="text-base text-emerald-400">৳ ০</strong>
                     </div>
-                    <div id="ledger-entries-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
+                    <div id="ledger-entries-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
                 </div>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
@@ -758,34 +883,139 @@
             </div>
         </section>
 
-        <!-- ==================== TAB 5: BACKUP & EXPORT ==================== -->
-        <section id="tab-backup" class="hidden space-y-4">
+        <!-- ==================== TAB 5: SETTINGS & BACKUP (Moved to Bottom Nav!) ==================== -->
+        <section id="tab-settings" class="hidden space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
-                <h2 class="text-sm font-bold text-gray-700 border-b pb-2">সরাসরি ফোনে Excel ও ব্যাকআপ ডাউনলোড</h2>
-                <p class="text-xs text-gray-600 leading-relaxed">
-                    নিচের বাটনে চাপ দিলে ফাইলটি সরাসরি আপনার ফোনের <strong>Download / Documents</strong> ফোল্ডারে সেভ হয়ে যাবে।
-                </p>
-                
-                <button onclick="exportToRealExcel()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm">
-                    📊 Excel ফাইল ডাউনলোড করুন (.XLSX)
-                </button>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="text-sm font-bold text-gray-800">⚙️ সেটিংস ও ব্যাকআপ</h2>
+                    <button onclick="checkForAppUpdate()" id="btn-check-update" class="bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold">
+                        🔄 Update চেক
+                    </button>
+                </div>
 
-                <button onclick="exportFullJSON()" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm">
-                    💾 পূর্ণাঙ্গ অ্যাপ ব্যাকআপ ডাউনলোড (.JSON)
-                </button>
+                <!-- Settings Sub-tabs (5 tabs including ব্যাকআপ) -->
+                <div class="grid grid-cols-5 bg-gray-100 p-1 rounded-lg text-[10px] font-bold gap-0.5">
+                    <button type="button" onclick="switchSettingsSub('general')" id="ssub-btn-general" class="py-1.5 rounded bg-white text-emerald-800 shadow-sm">সাধারণ</button>
+                    <button type="button" onclick="switchSettingsSub('members')" id="ssub-btn-members" class="py-1.5 rounded text-gray-600">চাঁদাদাতা</button>
+                    <button type="button" onclick="switchSettingsSub('income_cats')" id="ssub-btn-income_cats" class="py-1.5 rounded text-gray-600">আয় খাত</button>
+                    <button type="button" onclick="switchSettingsSub('expense_cats')" id="ssub-btn-expense_cats" class="py-1.5 rounded text-gray-600">ব্যয় খাত</button>
+                    <button type="button" onclick="switchSettingsSub('backup')" id="ssub-btn-backup" class="py-1.5 rounded text-gray-600">ব্যাকআপ</button>
+                </div>
 
-                <div id="last-saved-info" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-900 p-3 rounded-xl text-xs"></div>
+                <!-- Sub 1: General, Default Chanda Amount & Banks -->
+                <div id="ssub-general" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">মসজিদের নাম (PDF রিপোর্টে দেখাবে)</label>
+                        <input type="text" id="set-mosque-name" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">ঠিকানা</label>
+                        <input type="text" id="set-mosque-address" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">শুরুর নগদ জের (Cash)</label>
+                            <input type="number" inputmode="numeric" id="set-open-cash" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">মাসিক ধার্য্য চাঁদা (৳)</label>
+                            <input type="number" inputmode="numeric" id="set-default-chanda" value="100" class="w-full border border-emerald-400 rounded-lg p-2 text-sm font-bold bg-emerald-50">
+                        </div>
+                    </div>
 
-                <div class="pt-3 border-t">
-                    <label class="block text-xs font-bold text-gray-700 mb-1">আগের ব্যাকআপ ফাইল রিস্টোর করুন (.JSON)</label>
-                    <input type="file" id="import-json-file" accept=".json" onchange="importFullJSON(event)" class="w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gray-200 file:text-gray-800">
+                    <div class="border-t pt-2 space-y-2">
+                        <label class="block text-xs font-bold text-indigo-800">ব্যাংক অ্যাকাউন্ট সমূহ ও প্রারম্ভিক জের</label>
+                        <div id="settings-banks-list" class="space-y-2"></div>
+                        <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 space-y-2">
+                            <p class="text-[11px] font-bold text-gray-600">+ নতুন ব্যাংক যোগ করুন</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="set-new-bank-name" placeholder="ব্যাংকের নাম" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
+                                <input type="text" inputmode="numeric" id="set-new-bank-acc" placeholder="অ্যাকাউন্ট নং" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="number" inputmode="numeric" id="set-new-bank-open" placeholder="শুরুর জের (টাকা)" class="flex-1 border border-gray-300 rounded p-1.5 text-xs bg-white">
+                                <button type="button" onclick="addBankFromSettings()" class="bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-bold">যোগ করুন</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="saveMosqueSettings()" class="w-full bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm">তথ্য সংরক্ষণ করুন</button>
+                </div>
+
+                <!-- Sub 2: Monthly Chanda Members List -->
+                <div id="ssub-members" class="hidden space-y-3">
+                    <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-emerald-950">+ নতুন চাঁদাদাতা সদস্য যোগ করুন</span>
+                            <span class="text-[11px] font-bold text-emerald-800" id="set-members-total"></span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <input type="text" inputmode="numeric" id="set-mem-sl" placeholder="ক্র.নং" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
+                            <input type="text" id="set-mem-name" placeholder="সদস্যের নাম *" class="col-span-2 border border-gray-300 rounded p-1.5 text-xs bg-white">
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <input type="text" id="set-mem-bari" placeholder="বাড়ির নাম" class="col-span-2 border border-gray-300 rounded p-1.5 text-xs bg-white">
+                            <input type="number" inputmode="numeric" id="set-mem-fixed" placeholder="ধার্য্য (৳)" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
+                        </div>
+                        <button type="button" onclick="addChandaMember()" class="w-full bg-emerald-700 text-white py-1.5 rounded text-xs font-bold">+ সদস্য যুক্ত করুন</button>
+                    </div>
+
+                    <div class="bg-indigo-50 border border-indigo-200 p-2 rounded-lg space-y-1">
+                        <label class="block text-[11px] font-bold text-indigo-950">📊 নতুন বছরের Excel ফাইল ইমপোর্ট (.xlsx)</label>
+                        <input type="file" accept=".xlsx,.xls" onchange="importChandaExcel(event)" class="w-full text-[11px] text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-bold file:bg-indigo-700 file:text-white">
+                    </div>
+
+                    <input type="text" id="set-mem-search" oninput="renderSettingsMembersList()" placeholder="নং (যেমন 1 বা ০১), নাম বা বাড়ী দিয়ে খুঁজুন..." class="w-full border border-gray-300 rounded-lg p-1.5 text-xs">
+                    <div id="settings-members-list" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+                </div>
+
+                <!-- Sub 3: Income Categories -->
+                <div id="ssub-income_cats" class="hidden space-y-3">
+                    <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg space-y-2">
+                        <label class="block text-xs font-bold text-emerald-900">+ নতুন আয়ের খাত যুক্ত করুন</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="set-new-inc-cat" placeholder="যেমন: জুমার বিশেষ আদায়" class="flex-1 border border-gray-300 rounded-lg p-2 text-xs bg-white">
+                            <button type="button" onclick="addCategoryFromSettings('income')" class="bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold">যুক্ত</button>
+                        </div>
+                    </div>
+                    <div id="settings-inc-cats-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
+                </div>
+
+                <!-- Sub 4: Expense Categories -->
+                <div id="ssub-expense_cats" class="hidden space-y-3">
+                    <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-lg space-y-2">
+                        <label class="block text-xs font-bold text-rose-900">+ নতুন ব্যয়ের খাত যুক্ত করুন</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="set-new-exp-cat" placeholder="যেমন: মসজিদ পরিষ্কার ও সামগ্রী" class="flex-1 border border-gray-300 rounded-lg p-2 text-xs bg-white">
+                            <button type="button" onclick="addCategoryFromSettings('expense')" class="bg-rose-700 text-white px-3 py-2 rounded-lg text-xs font-bold">যুক্ত</button>
+                        </div>
+                    </div>
+                    <div id="settings-exp-cats-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
+                </div>
+
+                <!-- Sub 5: Backup & Restore (Moved inside Settings!) -->
+                <div id="ssub-backup" class="hidden space-y-3">
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        নিচের বাটনে চাপ দিলে ফাইলটি সরাসরি আপনার ফোনের <strong>Download / Documents</strong> ফোল্ডারে সেভ হয়ে যাবে।
+                    </p>
+                    <button onclick="exportToRealExcel()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm">
+                        📊 Excel ফাইল ডাউনলোড করুন (.XLSX)
+                    </button>
+                    <button onclick="exportFullJSON()" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm">
+                        💾 পূর্ণাঙ্গ অ্যাপ ব্যাকআপ ডাউনলোড (.JSON)
+                    </button>
+                    <div id="last-saved-info" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-900 p-3 rounded-xl text-xs"></div>
+                    <div class="pt-3 border-t">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">আগের ব্যাকআপ ফাইল রিস্টোর করুন (.JSON)</label>
+                        <input type="file" id="import-json-file" accept=".json" onchange="importFullJSON(event)" class="w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gray-200 file:text-gray-800">
+                    </div>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar (5 Tabs: হোম, আয়/ব্যয়, রাফ নোট, হিসাব বই, ব্যাকআপ) -->
+    <!-- Bottom Navigation Bar (হোম হিসাব, আয়/ব্যয়, রাফ নোট, হিসাব বই, সেটিংস) -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-30 no-print shadow-lg">
         <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center text-emerald-700 font-bold text-[11px]">
             <span class="text-lg">🏠</span>
@@ -803,9 +1033,9 @@
             <span class="text-lg">📚</span>
             <span>হিসাব বই</span>
         </button>
-        <button onclick="switchMainTab('backup')" id="nav-backup" class="flex flex-col items-center text-gray-500 font-medium text-[11px]">
-            <span class="text-lg">☁️</span>
-            <span>ব্যাকআপ</span>
+        <button onclick="switchMainTab('settings')" id="nav-settings" class="flex flex-col items-center text-gray-500 font-medium text-[11px]">
+            <span class="text-lg">⚙️</span>
+            <span>সেটিংস</span>
         </button>
     </nav>
 
@@ -859,122 +1089,6 @@
         </div>
     </div>
 
-    <!-- ==================== MOSQUE SETTINGS MODAL (4 Clean Tabs: সাধারণ/ব্যাংক, চাঁদাদাতা, আয়ের খাত, ব্যয়ের খাত) ==================== -->
-    <div id="mosque-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 no-print">
-        <div class="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 shadow-xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="text-sm font-bold text-gray-800">সেটিংস: মসজিদ, ব্যাংক, চাঁদাদাতা ও খাত</h3>
-                <button onclick="closeMosqueModal()" class="text-gray-400 font-bold text-lg">✕</button>
-            </div>
-
-            <!-- Settings Sub-tabs -->
-            <div class="grid grid-cols-4 bg-gray-100 p-1 rounded-lg text-[10.5px] font-bold">
-                <button type="button" onclick="switchSettingsSub('general')" id="ssub-btn-general" class="py-1.5 rounded bg-white text-emerald-800 shadow-sm">সাধারণ/ব্যাংক</button>
-                <button type="button" onclick="switchSettingsSub('members')" id="ssub-btn-members" class="py-1.5 rounded text-gray-600">চাঁদাদাতা</button>
-                <button type="button" onclick="switchSettingsSub('income_cats')" id="ssub-btn-income_cats" class="py-1.5 rounded text-gray-600">আয়ের খাত</button>
-                <button type="button" onclick="switchSettingsSub('expense_cats')" id="ssub-btn-expense_cats" class="py-1.5 rounded text-gray-600">ব্যয়ের খাত</button>
-            </div>
-
-            <!-- Sub 1: General, Default Chanda Amount & Banks -->
-            <div id="ssub-general" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">মসজিদের নাম (PDF রিপোর্টে দেখাবে)</label>
-                    <input type="text" id="set-mosque-name" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">ঠিকানা</label>
-                    <input type="text" id="set-mosque-address" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">শুরুর নগদ জের (Cash)</label>
-                        <input type="number" inputmode="numeric" id="set-open-cash" class="w-full border border-gray-300 rounded-lg p-2 text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-emerald-800 mb-1">মাসিক ধার্য্য চাঁদা (৳)</label>
-                        <input type="number" inputmode="numeric" id="set-default-chanda" value="100" class="w-full border border-emerald-400 rounded-lg p-2 text-sm font-bold bg-emerald-50">
-                    </div>
-                </div>
-
-                <div class="border-t pt-2 space-y-2">
-                    <label class="block text-xs font-bold text-indigo-800">ব্যাংক অ্যাকাউন্ট সমূহ ও প্রারম্ভিক জের</label>
-                    <div id="settings-banks-list" class="space-y-2"></div>
-                    <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 space-y-2">
-                        <p class="text-[11px] font-bold text-gray-600">+ নতুন ব্যাংক যোগ করুন</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="set-new-bank-name" placeholder="ব্যাংকের নাম" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
-                            <input type="text" inputmode="numeric" id="set-new-bank-acc" placeholder="অ্যাকাউন্ট নং" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="number" inputmode="numeric" id="set-new-bank-open" placeholder="শুরুর জের (টাকা)" class="flex-1 border border-gray-300 rounded p-1.5 text-xs bg-white">
-                            <button type="button" onclick="addBankFromSettings()" class="bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-bold">যোগ করুন</button>
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="saveMosqueSettings()" class="w-full bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm">তথ্য সংরক্ষণ করুন</button>
-            </div>
-
-            <!-- Sub 2: Monthly Chanda Members List -->
-            <div id="ssub-members" class="hidden space-y-3">
-                <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-emerald-950">+ নতুন চাঁদাদাতা সদস্য যোগ করুন</span>
-                        <span class="text-[11px] font-bold text-emerald-800" id="set-members-total"></span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-1.5">
-                        <input type="text" inputmode="numeric" id="set-mem-sl" placeholder="ক্র.নং" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
-                        <input type="text" id="set-mem-name" placeholder="সদস্যের নাম *" class="col-span-2 border border-gray-300 rounded p-1.5 text-xs bg-white">
-                    </div>
-                    <div class="grid grid-cols-3 gap-1.5">
-                        <input type="text" id="set-mem-bari" placeholder="বাড়ির নাম" class="col-span-2 border border-gray-300 rounded p-1.5 text-xs bg-white">
-                        <input type="number" inputmode="numeric" id="set-mem-fixed" placeholder="ধার্য্য (৳)" class="border border-gray-300 rounded p-1.5 text-xs bg-white">
-                    </div>
-                    <button type="button" onclick="addChandaMember()" class="w-full bg-emerald-700 text-white py-1.5 rounded text-xs font-bold">+ সদস্য যুক্ত করুন</button>
-                </div>
-
-                <div class="bg-indigo-50 border border-indigo-200 p-2 rounded-lg space-y-1">
-                    <label class="block text-[11px] font-bold text-indigo-950">📊 নতুন বছরের Excel ফাইল ইমপোর্ট (.xlsx)</label>
-                    <input type="file" accept=".xlsx,.xls" onchange="importChandaExcel(event)" class="w-full text-[11px] text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-bold file:bg-indigo-700 file:text-white">
-                </div>
-
-                <input type="text" id="set-mem-search" oninput="renderSettingsMembersList()" placeholder="সদস্যের নাম বা বাড়ি দিয়ে খুঁজুন..." class="w-full border border-gray-300 rounded-lg p-1.5 text-xs">
-                <div id="settings-members-list" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
-            </div>
-
-            <!-- Sub 3: Income Categories -->
-            <div id="ssub-income_cats" class="hidden space-y-3">
-                <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg space-y-2">
-                    <label class="block text-xs font-bold text-emerald-900">+ নতুন আয়ের খাত যুক্ত করুন</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="set-new-inc-cat" placeholder="যেমন: জুমার বিশেষ আদায়" class="flex-1 border border-gray-300 rounded-lg p-2 text-xs bg-white">
-                        <button type="button" onclick="addCategoryFromSettings('income')" class="bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold">যুক্ত</button>
-                    </div>
-                </div>
-                <div id="settings-inc-cats-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
-            </div>
-
-            <!-- Sub 4: Expense Categories -->
-            <div id="ssub-expense_cats" class="hidden space-y-3">
-                <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-lg space-y-2">
-                    <label class="block text-xs font-bold text-rose-900">+ নতুন ব্যয়ের খাত যুক্ত করুন</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="set-new-exp-cat" placeholder="যেমন: মসজিদ পরিষ্কার ও সামগ্রী" class="flex-1 border border-gray-300 rounded-lg p-2 text-xs bg-white">
-                        <button type="button" onclick="addCategoryFromSettings('expense')" class="bg-rose-700 text-white px-3 py-2 rounded-lg text-xs font-bold">যুক্ত</button>
-                    </div>
-                </div>
-                <div id="settings-exp-cats-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
-            </div>
-            
-            <div class="pt-3 border-t flex items-center justify-between">
-                <span class="text-xs text-gray-500">ভার্সন: <strong id="app-current-ver">v1.5.2</strong></span>
-                <button onclick="checkForAppUpdate()" id="btn-check-update" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1">
-                    🔄 Check for Update
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- ==================== IMAGE LIGHTBOX MODAL ==================== -->
     <div id="img-lightbox-modal" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 no-print">
         <img id="img-lightbox-src" src="" class="max-w-full max-h-[85vh] rounded-xl shadow-2xl border-2 border-white">
@@ -988,10 +1102,10 @@
     <script>
         const STORAGE_KEY = 'baytun_najat_mosque_v1';
         const GITHUB_REPO = 'shahedshift/Hibab-4';
-        const CURRENT_APP_VERSION = 'v1.5.2';
+        const CURRENT_APP_VERSION = 'v1.6.0';
         const bnMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+        const bnShortMonths = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টে', 'অক্টো', 'নভে', 'ডিসে'];
 
-        // Preloaded 194 Chanda Members
         const DEFAULT_CHANDA_MEMBERS = [{"sl": "০১", "name": "মোঃ মানিক", "bari": "সাধারণ", "fixed": 0}, {"sl": "০২", "name": "মোঃ জালাল উদ্দিন", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৩", "name": "মোঃ আবদুল হাকিম (মানিক)", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৪", "name": "মোঃ বাবুল", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৫", "name": "মোঃ আব্দুল ওহাব", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৬", "name": "মোঃ নুরুল আলম", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৭", "name": "মোঃ আব্দুল খালেক", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৮", "name": "মোঃ জাহেদুল ইসলাম", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "০৯", "name": "মোঃ মুজাহিদুল ইসলাম", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "১০", "name": "মোঃ একরাম সওদাগর", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "১১", "name": "মোঃ মতিউর রহমান", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "১২", "name": "মোঃ এমদাদুল হক (মনা সওঃ)", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "১৩", "name": "মোঃ মাহমদুল হক (মাদল সওঃ)", "bari": "মোয়াজ্জিন বাড়ি", "fixed": 0}, {"sl": "১৪", "name": "মোঃ কবির আহমদ", "bari": "কবির আহমদ বাড়ি", "fixed": 0}, {"sl": "১৫", "name": "মোঃ নুর মোহাম্মদ", "bari": "কবির আহমদ বাড়ি", "fixed": 0}, {"sl": "১৬", "name": "মোঃ মাহমুদুল হাসান (নতুন)", "bari": "কবির আহমদ বাড়ি", "fixed": 0}, {"sl": "১৭", "name": "মোঃ নুরুল আলম", "bari": "কবির আহমদ বাড়ি", "fixed": 0}, {"sl": "১৮", "name": "মোঃ রফিক", "bari": "ছমেরা ম্যানশন", "fixed": 0}, {"sl": "১৯", "name": "মোঃ আব্দুল রহিম", "bari": "ছমেরা ম্যানশন", "fixed": 0}, {"sl": "২০", "name": "মোঃ ইব্রাহিম", "bari": "ছমেরা ম্যানশন", "fixed": 0}, {"sl": "২১", "name": "মোঃ আব্দুল করিম", "bari": "ছমেরা ম্যানশন", "fixed": 0}, {"sl": "২২", "name": "মোঃ ইসমাঈল", "bari": "ছমেরা ম্যানশন", "fixed": 0}, {"sl": "২৩", "name": "মোঃ শফিক", "bari": "শফিক বাড়ি", "fixed": 0}, {"sl": "২৪", "name": "মাওলানা মোঃ আবুল হোসাইন", "bari": "শফিক বাড়ি", "fixed": 0}, {"sl": "২৫", "name": "মোঃ বদিউল সওদাগর", "bari": "বদিউল আলম সওদাগর বাড়ি", "fixed": 0}, {"sl": "২৬", "name": "মোঃ দিদারুল আলম (হিরু)", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "২৭", "name": "মোঃ রবিউল আলম", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "২৮", "name": "মোঃ ছগির আলম", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "২৯", "name": "মোঃ মোজাফ্‌ফর", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "৩০", "name": "মোঃ বালাম", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "৩১", "name": "মোঃ আলাউদ্দিন", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "৩২", "name": "মোঃ সালাউদ্দিন", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "৩৩", "name": "মোঃ নুরুল আবছার (নতুন)", "bari": "ছুরুত মিয়া দপাদার বাড়ি", "fixed": 0}, {"sl": "৩৪", "name": "মোঃ আব্দুল মান্নান (ড্রাইভার)", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৩৫", "name": "মোঃ সোহেল", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৩৬", "name": "মোঃ আলী আজগর (বাপ্পু)", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৩৭", "name": "মোঃ আবুল কাশেম", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৩৮", "name": "মোঃ সিরাজ ড্রাইভার", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৩৯", "name": "মোঃ আনোয়ার ড্রাইভার", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৪০", "name": "মাওলানা মোঃ আজম", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৪১", "name": "মোঃ তাজম", "bari": "অচি চৌকিদার বাড়ি", "fixed": 0}, {"sl": "৪২", "name": "মোঃ আবু নাছির", "bari": "সেকান্দর বাড়ি", "fixed": 0}, {"sl": "৪৩", "name": "মোঃ পারভেজ", "bari": "সেকান্দর বাড়ি", "fixed": 0}, {"sl": "৪৪", "name": "মোঃ আব্দুস শুক্কুর মেম্বার", "bari": "আব্দুস শুক্কুর মেম্বার বাড়ি", "fixed": 0}, {"sl": "৪৫", "name": "মোঃ ইলিয়াস", "bari": "আব্দুস শুক্কুর মেম্বার বাড়ি", "fixed": 0}, {"sl": "৪৬", "name": "মোঃ মাহমুদুল হক বাদশা", "bari": "আব্দুস শুক্কুর মেম্বার বাড়ি", "fixed": 0}, {"sl": "৪৭", "name": "মোঃ এমদাদ", "bari": "আব্দুস শুক্কুর মেম্বার বাড়ি", "fixed": 0}, {"sl": "৪৮", "name": "মোঃ বেলাল", "bari": "আব্দুস শুক্কুর মেম্বার বাড়ি", "fixed": 0}, {"sl": "৪৯", "name": "মোঃ আব্দুর রহিম (ড্রাইভার)", "bari": "আব্দুস শুক্কুর মেম্বার বাড়ি", "fixed": 0}, {"sl": "৫০", "name": "মোঃ ওয়াশিম", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫১", "name": "মোঃ নাছির (করাতি)", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫২", "name": "মোঃ ইউসুফ", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৩", "name": "মোঃ আজম", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৪", "name": "মোঃ মনু", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৫", "name": "মোঃ ইউসুফ ভেন্ডার", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৬", "name": "মাওলানা মোঃ এমদাদ উল্লাহ", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৭", "name": "মোঃ দিদারুল আলম (বসির)", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৮", "name": "মোঃ রিফাত", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৫৯", "name": "মোঃ সেলিম", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৬০", "name": "মোঃ জসিম", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৬১", "name": "মাওলানা মোঃ ইয়াছিন", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৬২", "name": "মোঃ ইসমাঈল (ননাই)", "bari": "ইউসুফ ভেন্ডার বাড়ি", "fixed": 0}, {"sl": "৬৩", "name": "মোঃ জাহাঙ্গীর কোম্পানি", "bari": "কবির ম্যানশন বাড়ি", "fixed": 0}, {"sl": "৬৪", "name": "মোঃ আলমগীর", "bari": "কবির ম্যানশন বাড়ি", "fixed": 0}, {"sl": "৬৫", "name": "মোঃ আশরাফুল আলম (প্রান্ত)", "bari": "কবির ম্যানশন বাড়ি", "fixed": 0}, {"sl": "৬৬", "name": "মোঃ হাশেম কোম্পানি", "bari": "হাশেম কোম্পানি বাড়ি", "fixed": 0}, {"sl": "৬৭", "name": "মোঃ হোসেন সওদাগর", "bari": "হোসেন সওদাগর বাড়ি", "fixed": 0}, {"sl": "৬৮", "name": "মোঃ উসমান কোম্পানি", "bari": "উসমান কোম্পানি বাড়ি", "fixed": 0}, {"sl": "৬৯", "name": "মোঃ মনছুর", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭০", "name": "মোঃ ইসমাঈল (চুঙ্কু)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭১", "name": "মোঃ শোয়াইব", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭২", "name": "মোঃ একরাম", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৩", "name": "মোঃ সোলায়মান", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৪", "name": "মোঃ জাহেদ", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৫", "name": "মোঃ জাবেদ", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৬", "name": "মোঃ সাইফুল আজম (জাসুদ)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৭", "name": "মোঃ সোহেল", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৮", "name": "মোঃ এমদাদুল হক বাদশা", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৭৯", "name": "মোঃ আবুল কাশেম (মানিক)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮০", "name": "মোঃ সেলিম", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮১", "name": "মোঃ সরওয়ার", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮২", "name": "মোঃ মুছা", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৩", "name": "হাফেজ মোঃ লোকমান হাকিম", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৪", "name": "মোঃ এমরান", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৫", "name": "মাওলানা মোঃ নোমান (ওয়াশিম)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৬", "name": "মোঃ কলিম উদ্দিন", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৭", "name": "মোঃ সোহেল রানা (টিটু)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৮", "name": "মোঃ মাহমুদ", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৮৯", "name": "মোঃ হানিফ", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯০", "name": "মোঃ খালেদ", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯১", "name": "মোঃ হাসান (মিস্ত্রি)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯২", "name": "মোঃ শাহজাহান (সওঃ)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৩", "name": "মোঃ আবু তাহের (সওঃ)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৪", "name": "মোঃ আব্দুল করিম", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৫", "name": "মোঃ জসিম (ড্রাইভার)", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৬", "name": "মোঃ ফারুক", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৭", "name": "মোঃ ইউনুছ", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৮", "name": "মোঃ জাফর", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "৯৯", "name": "মোঃ জয়নাল", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০০", "name": "মোঃ আকবর হোসেন", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০১", "name": "মোঃ আব্দুস শুক্কুর", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০২", "name": "মোঃ সুফিয়ান", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০৩", "name": "মোঃ বেলাল", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০৪", "name": "মোঃ মোস্তাফা কামাল", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০৫", "name": "মোঃ মোস্তাফা জালাল", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০৬", "name": "মোঃ মোস্তাফা হেলাল", "bari": "সাদেক আলী মুন্সির বাড়ি", "fixed": 0}, {"sl": "১০৭", "name": "মোঃ সিরাজুদ্দৌলা", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১০৮", "name": "মোঃ শফি", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১০৯", "name": "মোঃ আব্দুল লতিফ", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১০", "name": "মোঃ আব্দুল করিম", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১১", "name": "মোঃ মাসুদ", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১২", "name": "মোঃ সাইফুল ইসলাম", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৩", "name": "মোঃ ফরমান", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৪", "name": "মোঃ নুর আহমদ (বাচা)", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৫", "name": "মোঃ ওয়াশিম (বাচা)", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৬", "name": "মোঃ আমিনুর হক (ড্রাইভার)", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৭", "name": "মোঃ জসিম", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৮", "name": "মোঃ শওকত ওসমান", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১১৯", "name": "মোঃ রুবেল", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১২০", "name": "মোঃ জুয়েল", "bari": "আতর আলী চৌধুরী বাড়ি", "fixed": 0}, {"sl": "১২১", "name": "মোঃ শফি", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২২", "name": "মোঃ এমরান", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২৩", "name": "মোঃ এনাম", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২৪", "name": "মাওলানা মোঃ শফি", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২৫", "name": "মোঃ ইসমাঈল", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২৬", "name": "মোঃ ইকবাল", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২৭", "name": "মোঃ মামুন (মিস্ত্রী)", "bari": "বৈদ্য বাড়ি", "fixed": 0}, {"sl": "১২৮", "name": "মোঃ মোজাফ্‌ফর", "bari": "মাস্টার সালে আহমদ বাড়ি", "fixed": 0}, {"sl": "১২৯", "name": "মোঃ আব্দুল্লাহ আল ঈসা", "bari": "মাস্টার সালে আহমদ বাড়ি", "fixed": 0}, {"sl": "১৩০", "name": "মোঃ হারুন", "bari": "মাস্টার সালে আহমদ বাড়ি", "fixed": 0}, {"sl": "১৩১", "name": "মোঃ ইলিয়াছ", "bari": "মাস্টার সালে আহমদ বাড়ি", "fixed": 0}, {"sl": "১৩২", "name": "মাওলানা মোঃ হাসান মুরাদ", "bari": "মাস্টার সালে আহমদ বাড়ি", "fixed": 0}, {"sl": "১৩৩", "name": "মোঃ ইমতিয়াজ উদ্দিন (বাবু)", "bari": "মাস্টার সালে আহমদ বাড়ি", "fixed": 0}, {"sl": "১৩৪", "name": "কাজী শামসু", "bari": "কাজী শামসু বাড়ি", "fixed": 0}, {"sl": "১৩৫", "name": "মোঃ আবু ছিদ্দিক (বাবুল)", "bari": "কাজী শামসু বাড়ি", "fixed": 0}, {"sl": "১৩৬", "name": "মোঃ ইয়ার মুহাম্মদ", "bari": "কাজী শামসু বাড়ি", "fixed": 0}, {"sl": "১৩৭", "name": "মোঃ দিল মুহাম্মদ", "bari": "কাজী শামসু বাড়ি", "fixed": 0}, {"sl": "১৩৮", "name": "মোঃ জামাল", "bari": "কাজী শামসু বাড়ি", "fixed": 0}, {"sl": "১৩৯", "name": "মোঃ আমিন চৌকিদার", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪০", "name": "মোঃ খোরশেদ (ড্রাইভার)", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪১", "name": "মোঃ আলী আকবর (ড্রাইভার)", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪২", "name": "মোঃ শফিক", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪৩", "name": "মোঃ রফিক", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪৪", "name": "মোঃ নাছির", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪৫", "name": "মোঃ রুবেল", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪৬", "name": "মোঃ আবছার", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৩৯", "name": "মোঃ আলম (ড্রাইভার)", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪০", "name": "মোঃ সিরাজুল ইসলাম (মানিক)", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪১", "name": "মোঃ মঞ্জু", "bari": "লতিফ চৌকিদার বাড়ি", "fixed": 0}, {"sl": "১৪২", "name": "মোঃ নিশাত", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৩", "name": "মোঃ ইউসুফ", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৪", "name": "মোঃ ইলিয়াছ", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৫", "name": "মোঃ হারুন", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৬", "name": "মোঃ রফিক", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৭", "name": "মোঃ আলমগীর", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৮", "name": "মোঃ মনসুর", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৪৯", "name": "মোঃ রুবেল", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫০", "name": "মোঃ নূর হোসেন", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫১", "name": "মোঃ রুহুল আমিন", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫২", "name": "মুহাম্মদ উল্লাহ", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৩", "name": "মোঃ গুরা মিয়া", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৪", "name": "মোঃ সিরাজ (বাশি)", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৫", "name": "মোঃ আব্দুর রহমান", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৬", "name": "মোঃ ফয়জুল্লাহ", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৭", "name": "মোঃ আব্দুল হালিম", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৮", "name": "মোঃ মাহমুদুল্লাহ", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৫৯", "name": "মোঃ আবুল কালাম", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬০", "name": "মোঃ আবুল কাশেম", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬১", "name": "মোঃ হোসেন", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬২", "name": "মোঃ এজহার মিয়া", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৩", "name": "মোঃ শামসুল আলম", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৪", "name": "মোঃ সেলিম", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৫", "name": "মোঃ নুরুল কবির", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৬", "name": "মোঃ নাজিম উদ্দিন", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৭", "name": "মোঃ মিয়া", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৮", "name": "মোঃ লোকমান", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৬৯", "name": "মোঃ সিরাজ সারাং", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭০", "name": "মোঃ মুছা", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭১", "name": "মোঃ ইয়াছিন", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭২", "name": "মোঃ হাসান", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭৩", "name": "মোঃ আব্দুল করিম", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭৪", "name": "মোঃ শহিদুল্লাহ", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭৫", "name": "মোঃ সোলায়মান (নতুন)", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭৬", "name": "পারভিন (আপু)", "bari": "নবী তালুকদার বাড়ি", "fixed": 0}, {"sl": "১৭৭", "name": "মোঃ শাহ আলম (ড্রাইভার)", "bari": "শাহ আলম ড্রাইভার বাড়ি", "fixed": 0}, {"sl": "১৭৮", "name": "মোঃ শফি আলম", "bari": "শাহ আলম ড্রাইভার বাড়ি", "fixed": 0}, {"sl": "১৭৯", "name": "মোঃ জানে আলম", "bari": "শাহ আলম ড্রাইভার বাড়ি", "fixed": 0}, {"sl": "১৮০", "name": "মোঃ এমদাদ", "bari": "শাহ আলম ড্রাইভার বাড়ি", "fixed": 0}, {"sl": "১৮১", "name": "মোঃ দৌলত", "bari": "শাহ আলম ড্রাইভার বাড়ি", "fixed": 0}, {"sl": "১৮২", "name": "মোঃ আবু তাহের", "bari": "রাকিব ভবন", "fixed": 0}, {"sl": "১৮৩", "name": "মোঃ মনির আহমদ", "bari": "রাকিব ভবন", "fixed": 0}, {"sl": "১৮৪", "name": "মোঃ জাফর", "bari": "রাকিব ভবন", "fixed": 0}, {"sl": "১৮৫", "name": "মোঃ সাব্বির", "bari": "রাকিব ভবন", "fixed": 0}, {"sl": "১৮৬", "name": "মোঃ ফরিদুল হক", "bari": "রাকিব ভবন", "fixed": 0}].map((m, i) => ({
             id: 'mem_' + (i + 1),
             sl: m.sl,
@@ -1031,6 +1145,7 @@
         let currentEditTarget = null;
         let isBalanceExpanded = false;
         let isBookVoucherExpanded = false;
+        let activeStaffRole = 'imam';
 
         // Rough Note Media State
         let rnCurrentType = 'expense';
@@ -1055,6 +1170,9 @@
             }
             if (db.settings.defaultChandaRate === undefined) {
                 db.settings.defaultChandaRate = 100;
+            }
+            if (!db.settings.address || db.settings.address.includes('হাটহাজারী, চট্টগ্রাম')) {
+                db.settings.address = 'মধ্যম মীরের খীল (মাইজ পাড়া), মীরের হাট, হাটহাজারী পৌরসভা, চট্টগ্রাম।';
             }
 
             const c1 = db.categories.find(c => c.id === 'exp_1');
@@ -1101,16 +1219,20 @@
             return '৳ ' + Number(num || 0).toLocaleString('bn-BD');
         }
 
+        function toBnDigits(val) {
+            const bn = '০১২৩৪৫৬৭৮৯';
+            return String(val).replace(/[0-9]/g, d => bn[parseInt(d, 10)]);
+        }
+
         const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
         const EN_DIGITS = '0123456789';
 
         function normalizeDigitsForSearch(val) {
-            if (val === null || val === undefined) return '';
+            if (val === null || val === undefined) return { rawNormalized: '', numericVal: null };
             let s = String(val).trim().toLowerCase();
             for (let i = 0; i < BN_DIGITS.length; i++) {
                 s = s.split(BN_DIGITS[i]).join(EN_DIGITS[i]);
             }
-            // Also normalize leading zeros like "01" vs "1"
             const asInt = parseInt(s, 10);
             return {
                 rawNormalized: s,
@@ -1118,18 +1240,17 @@
             };
         }
 
-        function matchesNumberQuery(memberSl, rawQuery) {
+        function matchesNumberQuery(targetVal, rawQuery) {
             if (!rawQuery) return true;
             const qObj = normalizeDigitsForSearch(rawQuery);
-            const slObj = normalizeDigitsForSearch(memberSl);
+            const tObj = normalizeDigitsForSearch(targetVal);
             if (!qObj.rawNormalized) return true;
-            if (slObj.rawNormalized.includes(qObj.rawNormalized)) return true;
-            if (qObj.numericVal !== null && slObj.numericVal !== null) {
-                return slObj.numericVal === qObj.numericVal || slObj.numericVal.startsWith(qObj.numericVal);
+            if (tObj.rawNormalized.includes(qObj.rawNormalized)) return true;
+            if (qObj.numericVal !== null && tObj.numericVal !== null) {
+                return tObj.numericVal === qObj.numericVal || tObj.numericVal.startsWith(qObj.numericVal);
             }
             return false;
         }
-
 
         function todayISO() {
             return new Date().toISOString().split('T')[0];
@@ -1141,7 +1262,6 @@
             return b ? b.name : 'ব্যাংক';
         }
 
-        // Fixed PDF Generator: Clones print-area into a visible on-screen capture host at 0,0 so left side NEVER clips!
         async function generateCleanPDFBlob(sourceElement, filename) {
             const cloneHost = document.createElement('div');
             cloneHost.style.position = 'absolute';
@@ -1185,7 +1305,8 @@
         }
 
         function findExistingReceiptRecord(pageNo, bookId = null) {
-            const numPage = parseInt(pageNo);
+            const norm = normalizeDigitsForSearch(pageNo);
+            const numPage = norm.numericVal !== null ? parseInt(norm.numericVal, 10) : NaN;
             if (isNaN(numPage)) return null;
 
             for (const r of db.receiptEntries) {
@@ -1207,7 +1328,8 @@
 
             for (const t of db.transactions) {
                 if (t.type === 'income' && t.receiptNo) {
-                    const cleanRef = parseInt(String(t.receiptNo).replace(/\D/g, ''));
+                    const tNorm = normalizeDigitsForSearch(String(t.receiptNo).replace(/[^0-9০-৯]/g, ''));
+                    const cleanRef = tNorm.numericVal !== null ? parseInt(tNorm.numericVal, 10) : NaN;
                     if (cleanRef === numPage || String(t.receiptNo).trim() === String(pageNo).trim()) {
                         return {
                             source: 'direct_income',
@@ -1227,7 +1349,8 @@
         }
 
         function findBookByPageNumber(pageNo) {
-            const num = parseInt(pageNo);
+            const norm = normalizeDigitsForSearch(pageNo);
+            const num = norm.numericVal !== null ? parseInt(norm.numericVal, 10) : NaN;
             if (isNaN(num)) return null;
             return db.books.find(b => num >= Number(b.startPage) && num <= Number(b.endPage)) || null;
         }
@@ -1246,10 +1369,7 @@
                                 resolve();
                                 return;
                             }
-
-                            try {
-                                await Filesystem.requestPermissions();
-                            } catch (e) {}
+                            try { await Filesystem.requestPermissions(); } catch (e) {}
 
                             let savedLocation = '';
                             try {
@@ -1304,15 +1424,16 @@ ${savedLocation}`);
             const curMonth = now.getMonth();
             const curYear = now.getFullYear();
 
-            ['dash-year', 'ledger-year-select', 'yearly-report-year', 'stmt-year', 'cb-year', 'inc-chanda-year'].forEach(id => {
+            ['dash-year', 'ledger-year-select', 'yearly-report-year', 'stmt-year', 'cb-year', 'inc-chanda-year', 'exp-target-year', 'chanda-sheet-year', 'staff-panel-year'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.innerHTML = '';
                 for (let y = curYear - 2; y <= curYear + 3; y++) {
                     const opt = document.createElement('option');
                     opt.value = y;
-                    opt.innerText = y;
-                    if (y === (id === 'inc-chanda-year' ? 2027 : curYear)) opt.selected = true;
+                    opt.innerText = toBnDigits(y);
+                    const defYear = (id === 'inc-chanda-year' || id === 'chanda-sheet-year') ? 2027 : curYear;
+                    if (y === defYear) opt.selected = true;
                     el.appendChild(opt);
                 }
             });
@@ -1320,13 +1441,14 @@ ${savedLocation}`);
             document.getElementById('dash-month').value = curMonth;
             document.getElementById('stmt-month').value = curMonth;
             document.getElementById('cb-month').value = curMonth;
+            document.getElementById('exp-target-month').value = curMonth;
 
             ['entry-start-date', 'entry-end-date', 'inc-date', 'exp-date', 'bank-date', 'rn-date'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = todayISO();
             });
 
-            renderChandaMonthsGrid(curMonth);
+            renderChandaMonthsGrid();
             refreshAllDropdowns();
             handleIncomeCategoryChange();
             autoFillLastRecipientName();
@@ -1342,6 +1464,12 @@ ${savedLocation}`);
                         const dd = document.getElementById('dropdown-chanda-' + k);
                         if (dd) dd.classList.add('hidden');
                     });
+                }
+                if (!e.target.closest('#tsub-income')) {
+                    const rDd = document.getElementById('dropdown-inc-receipt');
+                    const bDd = document.getElementById('dropdown-inc-book');
+                    if (rDd) rDd.classList.add('hidden');
+                    if (bDd) bDd.classList.add('hidden');
                 }
             });
         };
@@ -1445,28 +1573,196 @@ ${savedLocation}`);
             }
         }
 
-        // ==================== MONTHLY CHANDA: SINGLE-ROW 3 COMBO BOXES + 12-MONTH CALENDAR ====================
-        function handleIncomeCategoryChange() {
+        // ==================== DIRECT INCOME: RECEIPT <-> BOOK <-> CATEGORY SYNC (NO EXTRA BARS) ====================
+        function openBookComboDropdown() {
+            document.getElementById('dropdown-inc-receipt')?.classList.add('hidden');
+            onDirectBookInput(true);
+        }
+
+        function onDirectBookInput(showAllForCategory = false) {
+            const dd = document.getElementById('dropdown-inc-book');
+            if (!dd) return;
+            dd.classList.remove('hidden');
+
+            const rawVal = document.getElementById('inc-book-no').value.trim();
+            const catId = document.getElementById('inc-category').value;
+
+            let list = [...db.books].sort((a, b) => String(a.bookNo).localeCompare(String(b.bookNo), undefined, { numeric: true }));
+            if (showAllForCategory && catId) {
+                const catBooks = list.filter(b => b.categoryId === catId);
+                if (catBooks.length > 0) list = catBooks;
+            }
+            if (!showAllForCategory && rawVal) {
+                list = list.filter(b => matchesNumberQuery(b.bookNo, rawVal));
+            }
+
+            // Auto-sync category if exact book match typed
+            if (rawVal) {
+                const exactBook = db.books.find(b => {
+                    const bN = normalizeDigitsForSearch(b.bookNo);
+                    const qN = normalizeDigitsForSearch(rawVal);
+                    return bN.numericVal !== null && bN.numericVal === qN.numericVal;
+                });
+                if (exactBook) {
+                    document.getElementById('inc-category').value = exactBook.categoryId;
+                    handleIncomeCategoryChange(true);
+                }
+            }
+
+            dd.innerHTML = list.map(b => {
+                const cat = db.categories.find(c => c.id === b.categoryId);
+                return `
+                    <div onclick="pickDirectBook('${b.id}')" class="px-2.5 py-1.5 hover:bg-emerald-50 border-b border-gray-100 cursor-pointer">
+                        <strong class="text-emerald-800">বই-${toBnDigits(b.bookNo)}</strong> <span class="text-[10px] text-gray-500">[${toBnDigits(b.startPage)}-${toBnDigits(b.endPage)}]</span>
+                        <span class="block text-[10px] text-gray-600">${cat ? cat.name : ''}</span>
+                    </div>
+                `;
+            }).join('') || '<div class="p-2 text-gray-400">কোনো বই পাওয়া যায়নি</div>';
+        }
+
+        function pickDirectBook(bookId) {
+            const b = db.books.find(x => x.id === bookId);
+            if (!b) return;
+            document.getElementById('inc-book-no').value = toBnDigits(b.bookNo);
+            document.getElementById('inc-category').value = b.categoryId;
+            document.getElementById('dropdown-inc-book').classList.add('hidden');
+            handleIncomeCategoryChange(true);
+        }
+
+        function openReceiptComboDropdown() {
+            document.getElementById('dropdown-inc-book')?.classList.add('hidden');
+            const dd = document.getElementById('dropdown-inc-receipt');
+            if (!dd) return;
+
+            const rawBook = document.getElementById('inc-book-no').value.trim();
+            const catId = document.getElementById('inc-category').value;
+
+            let targetBook = null;
+            if (rawBook) {
+                targetBook = db.books.find(b => {
+                    const bN = normalizeDigitsForSearch(b.bookNo);
+                    const qN = normalizeDigitsForSearch(rawBook);
+                    return bN.numericVal !== null && bN.numericVal === qN.numericVal;
+                });
+            }
+            if (!targetBook && catId) {
+                targetBook = db.books.find(b => b.categoryId === catId) || null;
+            }
+
+            if (!targetBook) {
+                dd.classList.add('hidden');
+                return;
+            }
+
+            const pages = [];
+            for (let p = Number(targetBook.startPage); p <= Number(targetBook.endPage); p++) {
+                const used = findExistingReceiptRecord(p, targetBook.id);
+                pages.push({ pageNo: p, used });
+            }
+
+            dd.classList.remove('hidden');
+            dd.innerHTML = `<div class="bg-emerald-100 text-emerald-950 px-2 py-1 text-[10px] font-bold sticky top-0">বই-${toBnDigits(targetBook.bookNo)} এর রশিদসমূহ</div>` +
+                pages.map(item => `
+                    <div onclick="pickDirectReceipt(${item.pageNo}, '${targetBook.id}')" class="px-2.5 py-1.5 hover:bg-emerald-50 border-b border-gray-100 cursor-pointer flex justify-between items-center">
+                        <span class="font-bold ${item.used ? 'text-amber-700' : 'text-gray-800'}">রশিদ #${toBnDigits(item.pageNo)}</span>
+                        ${item.used ? `<span class="text-[10px] bg-amber-100 text-amber-900 px-1.5 rounded">এন্ট্রিকৃত (${formatBDT(item.used.amount)})</span>` : '<span class="text-[10px] text-emerald-700">খালি</span>'}
+                    </div>
+                `).join('');
+        }
+
+        function pickDirectReceipt(pageNo, bookId) {
+            const b = db.books.find(x => x.id === bookId);
+            document.getElementById('inc-receipt-no').value = toBnDigits(pageNo);
+            if (b) {
+                document.getElementById('inc-book-no').value = toBnDigits(b.bookNo);
+                document.getElementById('inc-category').value = b.categoryId;
+                handleIncomeCategoryChange(true);
+            }
+            document.getElementById('dropdown-inc-receipt').classList.add('hidden');
+        }
+
+        function onDirectReceiptInput() {
+            const rawVal = document.getElementById('inc-receipt-no').value.trim();
+            if (!rawVal) return;
+
+            const norm = normalizeDigitsForSearch(rawVal);
+            const numPage = norm.numericVal !== null ? parseInt(norm.numericVal, 10) : NaN;
+            if (!isNaN(numPage)) {
+                const matchedBook = findBookByPageNumber(numPage);
+                if (matchedBook) {
+                    document.getElementById('inc-book-no').value = toBnDigits(matchedBook.bookNo);
+                    document.getElementById('inc-category').value = matchedBook.categoryId;
+                    handleIncomeCategoryChange(true);
+                }
+            }
+        }
+
+        function handleIncomeCategoryChange(fromSync = false) {
             const catId = document.getElementById('inc-category').value;
             const cat = db.categories.find(c => c.id === catId);
             const box = document.getElementById('monthly-chanda-box');
+
+            // If user manually switched category, auto-select first book of that category if current book doesn't match
+            if (!fromSync) {
+                const curBookVal = document.getElementById('inc-book-no').value.trim();
+                const curBook = db.books.find(b => matchesNumberQuery(b.bookNo, curBookVal) && b.categoryId === catId);
+                if (!curBook) {
+                    const catBooks = db.books.filter(b => b.categoryId === catId);
+                    document.getElementById('inc-book-no').value = catBooks.length === 1 ? toBnDigits(catBooks[0].bookNo) : '';
+                }
+            }
+
             if (cat && (cat.id === 'inc_1' || cat.name.includes('মাসিক চাঁদা'))) {
                 box.classList.remove('hidden');
-                recalcChandaAverage();
+                renderChandaMonthsGrid();
             } else {
                 box.classList.add('hidden');
             }
         }
 
-        function renderChandaMonthsGrid(defaultTickMonth = null) {
+        // ==================== MONTHLY CHANDA: 1-ROW 3 COMBO BOXES + PAID LOCK CALENDAR ====================
+        function getPaidMonthsForMember(memberId, year) {
+            const paidMap = {}; // monthIdx -> totalPaidAmount
+            if (!memberId) return paidMap;
+            const targetYearStr = String(year);
+
+            db.transactions.forEach(t => {
+                if (t.type === 'income' && t.memberId === memberId && String(t.chandaYear) === targetYearStr) {
+                    if (Array.isArray(t.chandaMonths) && t.chandaMonths.length > 0) {
+                        const perM = t.avgPerMonth || (t.amount / t.chandaMonths.length);
+                        t.chandaMonths.forEach(mIdx => {
+                            paidMap[mIdx] = (paidMap[mIdx] || 0) + perM;
+                        });
+                    }
+                }
+            });
+            return paidMap;
+        }
+
+        function renderChandaMonthsGrid() {
             const grid = document.getElementById('chanda-months-grid');
             if (!grid) return;
-            grid.innerHTML = bnMonths.map((mName, idx) => `
-                <label class="flex items-center gap-1.5 bg-gray-50 hover:bg-emerald-50 border border-gray-200 rounded px-2 py-1.5 text-[11px] font-semibold cursor-pointer">
-                    <input type="checkbox" value="${idx}" ${defaultTickMonth === idx ? 'checked' : ''} onchange="onChandaMonthsTickChange()" class="chanda-month-chk rounded text-emerald-700">
-                    <span>${mName}</span>
-                </label>
-            `).join('');
+            const memId = document.getElementById('inc-selected-member-id')?.value || '';
+            const year = document.getElementById('inc-chanda-year')?.value || '2027';
+            const paidMap = getPaidMonthsForMember(memId, year);
+
+            grid.innerHTML = bnMonths.map((mName, idx) => {
+                const paidAmt = paidMap[idx];
+                if (paidAmt && paidAmt > 0) {
+                    return `
+                        <div class="flex items-center justify-between bg-emerald-100 border border-emerald-400 rounded px-2 py-1.5 text-[10.5px] font-bold text-emerald-950 opacity-90 cursor-not-allowed">
+                            <span>🔒 ${mName}</span>
+                            <span class="text-[9.5px] bg-emerald-700 text-white px-1 rounded">Paid</span>
+                        </div>
+                    `;
+                }
+                return `
+                    <label class="flex items-center gap-1.5 bg-gray-50 hover:bg-emerald-50 border border-gray-200 rounded px-2 py-1.5 text-[11px] font-semibold cursor-pointer">
+                        <input type="checkbox" value="${idx}" onchange="onChandaMonthsTickChange()" class="chanda-month-chk rounded text-emerald-700">
+                        <span>${mName}</span>
+                    </label>
+                `;
+            }).join('');
             recalcChandaAverage();
         }
 
@@ -1482,6 +1778,8 @@ ${savedLocation}`);
 
             if (ticked.length > 0 && rate > 0) {
                 document.getElementById('inc-amount').value = rate * ticked.length;
+            } else if (ticked.length === 0) {
+                document.getElementById('inc-amount').value = '';
             }
             recalcChandaAverage();
         }
@@ -1494,7 +1792,7 @@ ${savedLocation}`);
 
             const cntEl = document.getElementById('chanda-tick-count');
             const avgEl = document.getElementById('chanda-avg-amount');
-            if (cntEl) cntEl.innerText = count.toLocaleString('bn-BD');
+            if (cntEl) cntEl.innerText = toBnDigits(count);
             if (avgEl) avgEl.innerText = formatBDT(avg);
         }
 
@@ -1518,7 +1816,7 @@ ${savedLocation}`);
                 const list = db.members.filter(m => matchesNumberQuery(m.sl, q));
                 dd.innerHTML = list.slice(0, 60).map(m => `
                     <div onclick="pickMemberFromCombo('${m.id}')" class="px-2.5 py-1.5 hover:bg-emerald-50 border-b border-gray-100 cursor-pointer">
-                        <strong class="text-emerald-800">${m.sl}</strong> — ${m.name} <span class="text-[10px] text-gray-500">(${m.bari || 'সাধারণ'})</span>
+                        <strong class="text-emerald-800">${toBnDigits(m.sl)}</strong> — ${m.name} <span class="text-[10px] text-gray-500">(${m.bari || 'সাধারণ'})</span>
                     </div>
                 `).join('') || '<div class="p-2 text-gray-400">পাওয়া যায়নি</div>';
             } else if (field === 'name') {
@@ -1528,10 +1826,10 @@ ${savedLocation}`);
                     const matchesName = !q || String(m.name).toLowerCase().includes(q);
                     return matchesBari && matchesName;
                 });
-                const header = selectedBari ? `<div class="bg-emerald-100 text-emerald-950 px-2 py-1 text-[10px] font-bold sticky top-0">বাড়ী: ${selectedBari} (${list.length} জন)</div>` : '';
+                const header = selectedBari ? `<div class="bg-emerald-100 text-emerald-950 px-2 py-1 text-[10px] font-bold sticky top-0">বাড়ী: ${selectedBari} (${toBnDigits(list.length)} জন)</div>` : '';
                 dd.innerHTML = header + (list.slice(0, 80).map(m => `
                     <div onclick="pickMemberFromCombo('${m.id}')" class="px-2.5 py-1.5 hover:bg-emerald-50 border-b border-gray-100 cursor-pointer">
-                        <div class="font-semibold text-gray-800">${m.name} <span class="text-emerald-700 font-bold">[${m.sl}]</span></div>
+                        <div class="font-semibold text-gray-800">${m.name} <span class="text-emerald-700 font-bold">[${toBnDigits(m.sl)}]</span></div>
                         <div class="text-[10px] text-gray-500">${m.bari || 'সাধারণ'}</div>
                     </div>
                 `).join('') || '<div class="p-2 text-gray-400">কোনো নাম পাওয়া যায়নি</div>');
@@ -1545,7 +1843,7 @@ ${savedLocation}`);
                     return `
                         <div onclick="pickBariFromCombo('${bName.replace(/'/g, "\'")}')" class="px-2.5 py-1.5 hover:bg-emerald-50 border-b border-gray-100 cursor-pointer flex justify-between items-center">
                             <span class="font-semibold text-gray-800">${bName}</span>
-                            <span class="text-[10px] bg-gray-100 px-1.5 rounded text-gray-600">${count} জন</span>
+                            <span class="text-[10px] bg-gray-100 px-1.5 rounded text-gray-600">${toBnDigits(count)} জন</span>
                         </div>
                     `;
                 }).join('') || '<div class="p-2 text-gray-400">বাড়ী পাওয়া যায়নি</div>';
@@ -1562,7 +1860,7 @@ ${savedLocation}`);
                 document.getElementById('inc-selected-member-id').value = '';
                 document.getElementById('combo-chanda-no').value = '';
                 document.getElementById('combo-chanda-name').value = '';
-                document.getElementById('selected-member-banner').classList.add('hidden');
+                renderChandaMonthsGrid();
             }
             document.getElementById('combo-chanda-name').focus();
             openComboDropdown('name');
@@ -1574,17 +1872,13 @@ ${savedLocation}`);
 
             document.getElementById('inc-selected-member-id').value = mem.id;
             document.getElementById('inc-selected-bari-filter').value = mem.bari || 'সাধারণ';
-            document.getElementById('combo-chanda-no').value = mem.sl;
+            document.getElementById('combo-chanda-no').value = toBnDigits(mem.sl);
             document.getElementById('combo-chanda-name').value = mem.name;
             document.getElementById('combo-chanda-bari').value = mem.bari || 'সাধারণ';
 
             ['no', 'name', 'bari'].forEach(k => document.getElementById('dropdown-chanda-' + k).classList.add('hidden'));
 
-            const banner = document.getElementById('selected-member-banner');
-            const txt = document.getElementById('selected-member-text');
-            banner.classList.remove('hidden');
-            txt.innerText = `✓ নং: ${mem.sl} | ${mem.name} | বাড়ী: ${mem.bari || 'সাধারণ'}`;
-
+            renderChandaMonthsGrid();
             onChandaMonthsTickChange();
         }
 
@@ -1594,7 +1888,7 @@ ${savedLocation}`);
             document.getElementById('combo-chanda-no').value = '';
             document.getElementById('combo-chanda-name').value = '';
             document.getElementById('combo-chanda-bari').value = '';
-            document.getElementById('selected-member-banner').classList.add('hidden');
+            renderChandaMonthsGrid();
         }
 
         // ==================== EXPENSE VOUCHER DIRECT AUTO-FILL NAME ====================
@@ -1603,9 +1897,9 @@ ${savedLocation}`);
             const noteInput = document.getElementById('exp-note');
             if (!catId || !noteInput) return;
 
-            const matching = [...db.transactions].reverse().find(t => t.type === 'expense' && t.categoryId === catId && t.note && t.note.trim());
+            const matching = [...db.transactions].reverse().find(t => t.type === 'expense' && t.categoryId === catId && (t.recipientName || t.note));
             if (matching) {
-                noteInput.value = matching.note.trim();
+                noteInput.value = (matching.recipientName || matching.note || '').trim();
             } else {
                 noteInput.value = '';
             }
@@ -1685,9 +1979,7 @@ ${savedLocation}`);
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     audioChunks = [];
                     mediaRecorder = new MediaRecorder(stream);
-                    mediaRecorder.ondataavailable = e => {
-                        if (e.data.size > 0) audioChunks.push(e.data);
-                    };
+                    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
                     mediaRecorder.onstop = () => {
                         const blob = new Blob(audioChunks, { type: 'audio/webm' });
                         const reader = new FileReader();
@@ -1706,9 +1998,7 @@ ${savedLocation}`);
                     alert('মাইক্রোফোন চালু করা যায়নি: ' + (err.message || err));
                 }
             } else {
-                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                    mediaRecorder.stop();
-                }
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
                 isRecordingVoice = false;
                 btn.innerHTML = '🎤 ভয়েস রেকর্ড';
                 btn.className = 'flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 py-2 px-2 rounded-lg text-xs font-bold';
@@ -1861,6 +2151,7 @@ ${savedLocation}`);
                     mode: 'cash',
                     bankId: '',
                     isAdvance: false,
+                    recipientName: n.person || '',
                     note: n.person || ''
                 });
             }
@@ -1880,7 +2171,7 @@ ${savedLocation}`);
         function renderRoughNotesSection() {
             const box = document.getElementById('rough-notes-list-container');
             const badge = document.getElementById('rn-total-badge');
-            if (badge) badge.innerText = `${(db.roughNotes || []).length} টি`;
+            if (badge) badge.innerText = `${toBnDigits((db.roughNotes || []).length)} টি`;
             if (!box) return;
 
             if (!db.roughNotes || db.roughNotes.length === 0) {
@@ -1926,7 +2217,7 @@ ${savedLocation}`);
 
         // ==================== NAVIGATION & SUB-TABS ====================
         function switchMainTab(tab) {
-            ['dashboard', 'transactions', 'roughnotes', 'ledger', 'backup'].forEach(t => {
+            ['dashboard', 'transactions', 'roughnotes', 'ledger', 'settings'].forEach(t => {
                 document.getElementById('tab-' + t).classList.add('hidden');
                 const nav = document.getElementById('nav-' + t);
                 nav.classList.remove('text-emerald-700', 'font-bold');
@@ -1950,9 +2241,14 @@ ${savedLocation}`);
             if (tab === 'ledger') {
                 refreshAllDropdowns();
                 renderCashBook();
+                renderChandaSummarySheet();
+                renderCurrentStaffLedger();
                 renderMonthlyStatement();
                 renderCategoryLedger();
                 renderYearlyStatement();
+            }
+            if (tab === 'settings') {
+                loadSettingsTabValues();
             }
         }
 
@@ -1967,7 +2263,7 @@ ${savedLocation}`);
         }
 
         function switchLedgerSub(sub) {
-            ['cashbook', 'receiptbooks', 'statement', 'category'].forEach(s => {
+            ['cashbook', 'receiptbooks', 'registers', 'statement'].forEach(s => {
                 document.getElementById('lsub-' + s).classList.add('hidden');
                 document.getElementById('lsub-btn-' + s).className = 'py-2 rounded-lg text-gray-600';
             });
@@ -1975,8 +2271,8 @@ ${savedLocation}`);
             document.getElementById('lsub-btn-' + sub).className = 'py-2 rounded-lg bg-white text-emerald-800 shadow-sm';
             if (sub === 'cashbook') renderCashBook();
             if (sub === 'receiptbooks') { loadBookPagesForEntry(); renderRegisteredBooks(); renderBookAudit(); }
-            if (sub === 'statement') renderMonthlyStatement();
-            if (sub === 'category') { renderCategoryLedger(); renderYearlyStatement(); }
+            if (sub === 'registers') { switchRegisterInner('chanda_sheet'); }
+            if (sub === 'statement') { renderMonthlyStatement(); renderCategoryLedger(); renderYearlyStatement(); }
         }
 
         function switchReceiptBookInner(inner) {
@@ -1989,6 +2285,24 @@ ${savedLocation}`);
             if (inner === 'entry') loadBookPagesForEntry();
             if (inner === 'manage') renderRegisteredBooks();
             if (inner === 'audit') renderBookAudit();
+        }
+
+        function switchRegisterInner(inner) {
+            ['chanda_sheet', 'imam', 'khatib', 'muazzin'].forEach(s => {
+                document.getElementById('reg-btn-' + s).className = 'py-1.5 rounded-lg text-emerald-950';
+            });
+            document.getElementById('reg-btn-' + inner).className = 'py-1.5 rounded-lg bg-emerald-800 text-white shadow-sm';
+
+            if (inner === 'chanda_sheet') {
+                document.getElementById('reg-chanda_sheet').classList.remove('hidden');
+                document.getElementById('reg-staff-panel').classList.add('hidden');
+                renderChandaSummarySheet();
+            } else {
+                activeStaffRole = inner;
+                document.getElementById('reg-chanda_sheet').classList.add('hidden');
+                document.getElementById('reg-staff-panel').classList.remove('hidden');
+                renderCurrentStaffLedger();
+            }
         }
 
         function toggleBookAddMode(mode) {
@@ -2010,49 +2324,210 @@ ${savedLocation}`);
             }
         }
 
-        // ==================== CASH BOOK (নগদান বই) ====================
+        // ==================== DUAL CASH & BANK BOOK (নগদান বই matching নগদান_বই.xlsx) ====================
+        function getDualCashBankData(year, month) {
+            const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+            const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-31`;
+
+            let openingCash = Number(db.settings.openingCash || 0);
+            let openingBank = db.banks.reduce((s, b) => s + Number(b.openingBalance || 0), 0);
+
+            const rawEntries = [];
+
+            db.receiptEntries.forEach(r => {
+                if (r.voided) return;
+                if (r.date < startOfMonth) {
+                    openingCash += r.amount;
+                } else if (r.date >= startOfMonth && r.date <= endOfMonth) {
+                    const book = db.books.find(b => b.id === r.bookId);
+                    const cat = book ? db.categories.find(c => c.id === book.categoryId) : null;
+                    rawEntries.push({
+                        kind: 'receipt',
+                        id: r.id,
+                        date: r.date,
+                        desc: `${cat ? cat.name : 'রশিদ আদায়'} (বই-${book ? book.bookNo : ''}, রশিদ #${r.pageNo})`,
+                        cashIn: r.amount,
+                        bankIn: 0,
+                        cashOut: 0,
+                        bankOut: 0
+                    });
+                }
+            });
+
+            db.transactions.forEach(t => {
+                const bName = getBankName(t.bankId);
+                const cat = db.categories.find(c => c.id === t.categoryId);
+
+                if (t.date < startOfMonth) {
+                    if (t.type === 'income') {
+                        if (t.mode === 'bank') openingBank += t.amount;
+                        else openingCash += t.amount;
+                    } else if (t.type === 'expense') {
+                        if (t.mode === 'bank') openingBank -= t.amount;
+                        else openingCash -= t.amount;
+                    } else if (t.type === 'bank_transfer') {
+                        if (t.transferDir === 'cash_to_bank') {
+                            openingCash -= t.amount;
+                            openingBank += t.amount;
+                        } else {
+                            openingBank -= t.amount;
+                            openingCash += t.amount;
+                        }
+                    }
+                } else if (t.date >= startOfMonth && t.date <= endOfMonth) {
+                    if (t.type === 'income') {
+                        const refStr = t.receiptNo ? ` [রশিদ: ${t.receiptNo}]` : '';
+                        const noteStr = t.note ? ` - ${t.note}` : '';
+                        rawEntries.push({
+                            kind: 'tx',
+                            id: t.id,
+                            date: t.date,
+                            desc: `${cat ? cat.name : 'আয়'}${refStr}${noteStr}`,
+                            cashIn: t.mode === 'bank' ? 0 : t.amount,
+                            bankIn: t.mode === 'bank' ? t.amount : 0,
+                            cashOut: 0,
+                            bankOut: 0
+                        });
+                    } else if (t.type === 'expense') {
+                        const refStr = t.voucherNo ? ` [ভাউচার: ${t.voucherNo}]` : '';
+                        const advStr = t.isAdvance ? ' [অগ্রিম]' : '';
+                        const noteStr = t.note ? ` - ${t.note}` : '';
+                        rawEntries.push({
+                            kind: 'tx',
+                            id: t.id,
+                            date: t.date,
+                            desc: `${cat ? cat.name : 'ব্যয়'}${advStr}${refStr}${noteStr}`,
+                            cashIn: 0,
+                            bankIn: 0,
+                            cashOut: t.mode === 'bank' ? 0 : t.amount,
+                            bankOut: t.mode === 'bank' ? t.amount : 0
+                        });
+                    } else if (t.type === 'bank_transfer') {
+                        const noteStr = t.note ? ` (${t.note})` : '';
+                        if (t.transferDir === 'cash_to_bank') {
+                            rawEntries.push({
+                                kind: 'tx',
+                                id: t.id,
+                                date: t.date,
+                                desc: `ব্যাংকে জমা (ক্যাশ থেকে ➔ ${bName})${noteStr}`,
+                                cashIn: 0,
+                                bankIn: t.amount,
+                                cashOut: t.amount,
+                                bankOut: 0
+                            });
+                        } else {
+                            rawEntries.push({
+                                kind: 'tx',
+                                id: t.id,
+                                date: t.date,
+                                desc: `ব্যাংক থেকে উত্তোলন (${bName} ➔ ক্যাশ)${noteStr}`,
+                                cashIn: t.amount,
+                                bankIn: 0,
+                                cashOut: 0,
+                                bankOut: t.amount
+                            });
+                        }
+                    }
+                }
+            });
+
+            rawEntries.sort((a, b) => a.date.localeCompare(b.date));
+
+            let runCash = openingCash;
+            let runBank = openingBank;
+            let sumCashIn = openingCash;
+            let sumBankIn = openingBank;
+            let sumCashOut = 0;
+            let sumBankOut = 0;
+
+            const computedRows = rawEntries.map((r, i) => {
+                sumCashIn += r.cashIn;
+                sumBankIn += r.bankIn;
+                sumCashOut += r.cashOut;
+                sumBankOut += r.bankOut;
+                runCash += (r.cashIn - r.cashOut);
+                runBank += (r.bankIn - r.bankOut);
+                return {
+                    ...r,
+                    sl: i + 2,
+                    cashBal: runCash,
+                    bankBal: runBank
+                };
+            });
+
+            return {
+                openingCash,
+                openingBank,
+                sumCashIn,
+                sumBankIn,
+                sumCashOut,
+                sumBankOut,
+                closingCash: runCash,
+                closingBank: runBank,
+                rows: computedRows
+            };
+        }
+
         function renderCashBook() {
             const mEl = document.getElementById('cb-month');
             const yEl = document.getElementById('cb-year');
             if (!mEl || !yEl) return;
             const month = parseInt(mEl.value);
             const year = parseInt(yEl.value);
-            const st = getStatementData('cash', year, month);
+            const cb = getDualCashBankData(year, month);
 
-            document.getElementById('cb-opening').innerText = formatBDT(st.opening);
-            document.getElementById('cb-closing').innerText = formatBDT(st.closing);
-            document.getElementById('cb-total-cr').innerText = formatBDT(st.totalCr);
-            document.getElementById('cb-total-dr').innerText = formatBDT(st.totalDr);
+            document.getElementById('cb-closing-cash').innerText = formatBDT(cb.closingCash);
+            document.getElementById('cb-closing-bank').innerText = formatBDT(cb.closingBank);
 
             const tbody = document.getElementById('cb-table-body');
             let html = `
-                <tr class="bg-amber-50/70 font-bold border-b border-gray-200">
-                    <td class="p-2 border-r text-gray-600">${year}-${String(month + 1).padStart(2, '0')}-01</td>
-                    <td class="p-2 border-r text-amber-900">প্রারম্ভিক হাতে নগদ (Opening Cash)</td>
-                    <td class="p-2 border-r text-right">-</td>
-                    <td class="p-2 border-r text-right">-</td>
-                    <td class="p-2 text-right text-amber-950">${formatBDT(st.opening)}</td>
+                <tr class="bg-amber-50/80 font-bold border-b border-gray-300">
+                    <td class="p-1.5 border-r text-center">${toBnDigits(1)}</td>
+                    <td class="p-1.5 border-r text-amber-950">শুরুর জের (গত মাস থেকে)</td>
+                    <td class="p-1.5 border-r text-right text-blue-700">${cb.openingCash > 0 ? formatBDT(cb.openingCash) : '-'}</td>
+                    <td class="p-1.5 border-r text-right text-blue-700">${cb.openingBank > 0 ? formatBDT(cb.openingBank) : '-'}</td>
+                    <td class="p-1.5 border-r text-right">-</td>
+                    <td class="p-1.5 border-r text-right">-</td>
+                    <td class="p-1.5 border-r text-right text-gray-900 bg-slate-100">${formatBDT(cb.openingCash)}</td>
+                    <td class="p-1.5 border-r text-right text-indigo-950 bg-indigo-50">${formatBDT(cb.openingBank)}</td>
+                    <td class="p-1.5 text-center">-</td>
                 </tr>
             `;
-            if (!st.rows.length) {
-                html += `<tr><td colspan="5" class="p-4 text-center text-gray-400">এই মাসে কোনো নগদ লেনদেন নেই।</td></tr>`;
+
+            if (!cb.rows.length) {
+                html += `<tr><td colspan="9" class="p-4 text-center text-gray-400">এই মাসে কোনো লেনদেন নেই।</td></tr>`;
             } else {
-                html += st.rows.map(r => `
+                html += cb.rows.map(r => `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="p-2 border-r whitespace-nowrap text-gray-600">${r.date}</td>
-                        <td class="p-2 border-r font-medium text-gray-800">${r.desc}</td>
-                        <td class="p-2 border-r text-right font-semibold text-emerald-700">${r.cr > 0 ? formatBDT(r.cr) : '-'}</td>
-                        <td class="p-2 border-r text-right font-semibold text-rose-700">${r.dr > 0 ? formatBDT(r.dr) : '-'}</td>
-                        <td class="p-2 text-right font-bold text-gray-900">${formatBDT(r.balance)}</td>
+                        <td class="p-1.5 border-r text-center text-gray-600">${toBnDigits(r.sl)}</td>
+                        <td class="p-1.5 border-r">
+                            <span class="font-semibold text-gray-800 block">${r.desc}</span>
+                            <span class="text-[9.5px] text-gray-500">${r.date}</span>
+                        </td>
+                        <td class="p-1.5 border-r text-right font-semibold text-blue-700">${r.cashIn > 0 ? formatBDT(r.cashIn) : ''}</td>
+                        <td class="p-1.5 border-r text-right font-semibold text-blue-700">${r.bankIn > 0 ? formatBDT(r.bankIn) : ''}</td>
+                        <td class="p-1.5 border-r text-right font-semibold text-rose-700">${r.cashOut > 0 ? formatBDT(r.cashOut) : ''}</td>
+                        <td class="p-1.5 border-r text-right font-semibold text-rose-700">${r.bankOut > 0 ? formatBDT(r.bankOut) : ''}</td>
+                        <td class="p-1.5 border-r text-right font-bold text-gray-900 bg-slate-50">${formatBDT(r.cashBal)}</td>
+                        <td class="p-1.5 border-r text-right font-bold text-indigo-950 bg-indigo-50/50">${formatBDT(r.bankBal)}</td>
+                        <td class="p-1.5 text-center">
+                            <button onclick="openEditModal('${r.kind}', '${r.id}')" class="bg-white border border-gray-300 px-1.5 py-0.5 rounded text-[10px] font-bold">✏️</button>
+                        </td>
                     </tr>
                 `).join('');
             }
+
             html += `
-                <tr class="bg-emerald-50 font-bold border-t-2 border-gray-300">
-                    <td colspan="2" class="p-2 border-r text-emerald-950">মাস শেষে হাতে নগদ স্থিতি</td>
-                    <td class="p-2 border-r text-right text-emerald-800">${formatBDT(st.totalCr)}</td>
-                    <td class="p-2 border-r text-right text-rose-800">${formatBDT(st.totalDr)}</td>
-                    <td class="p-2 text-right text-emerald-950">${formatBDT(st.closing)}</td>
+                <tr class="bg-emerald-100/80 font-bold border-t-2 border-gray-400">
+                    <td class="p-1.5 border-r"></td>
+                    <td class="p-1.5 border-r text-emerald-950">মোট</td>
+                    <td class="p-1.5 border-r text-right text-emerald-900">${formatBDT(cb.sumCashIn)}</td>
+                    <td class="p-1.5 border-r text-right text-emerald-900">${formatBDT(cb.sumBankIn)}</td>
+                    <td class="p-1.5 border-r text-right text-rose-900">${formatBDT(cb.sumCashOut)}</td>
+                    <td class="p-1.5 border-r text-right text-rose-900">${formatBDT(cb.sumBankOut)}</td>
+                    <td class="p-1.5 border-r text-right text-gray-950 bg-slate-200">${formatBDT(cb.closingCash)}</td>
+                    <td class="p-1.5 border-r text-right text-indigo-950 bg-indigo-100">${formatBDT(cb.closingBank)}</td>
+                    <td class="p-1.5"></td>
                 </tr>
             `;
             tbody.innerHTML = html;
@@ -2067,15 +2542,18 @@ ${savedLocation}`);
 
             const month = parseInt(document.getElementById('cb-month').value);
             const year = parseInt(document.getElementById('cb-year').value);
-            const st = getStatementData('cash', year, month);
+            const cb = getDualCashBankData(year, month);
 
-            const rowsHtml = st.rows.map(r => `
+            const rowsHtml = cb.rows.map(r => `
                 <tr style="page-break-inside: avoid;">
-                    <td style="border:1px solid #555;padding:5px;">${r.date}</td>
-                    <td style="border:1px solid #555;padding:5px;">${r.desc}</td>
-                    <td style="border:1px solid #555;padding:5px;text-align:right;">${r.cr > 0 ? formatBDT(r.cr) : '-'}</td>
-                    <td style="border:1px solid #555;padding:5px;text-align:right;">${r.dr > 0 ? formatBDT(r.dr) : '-'}</td>
-                    <td style="border:1px solid #555;padding:5px;text-align:right;font-weight:bold;">${formatBDT(r.balance)}</td>
+                    <td style="border:1px solid #555;padding:4px;text-align:center;">${toBnDigits(r.sl)}</td>
+                    <td style="border:1px solid #555;padding:4px;">${r.desc} <span style="font-size:10px;color:#555;">(${r.date})</span></td>
+                    <td style="border:1px solid #555;padding:4px;text-align:right;">${r.cashIn > 0 ? formatBDT(r.cashIn) : ''}</td>
+                    <td style="border:1px solid #555;padding:4px;text-align:right;">${r.bankIn > 0 ? formatBDT(r.bankIn) : ''}</td>
+                    <td style="border:1px solid #555;padding:4px;text-align:right;">${r.cashOut > 0 ? formatBDT(r.cashOut) : ''}</td>
+                    <td style="border:1px solid #555;padding:4px;text-align:right;">${r.bankOut > 0 ? formatBDT(r.bankOut) : ''}</td>
+                    <td style="border:1px solid #555;padding:4px;text-align:right;font-weight:bold;">${formatBDT(r.cashBal)}</td>
+                    <td style="border:1px solid #555;padding:4px;text-align:right;font-weight:bold;">${formatBDT(r.bankBal)}</td>
                 </tr>
             `).join('');
 
@@ -2085,39 +2563,59 @@ ${savedLocation}`);
                     <h1 style="font-size:20px;font-weight:bold;margin:0;">${db.settings.mosqueName}</h1>
                     <p style="font-size:12px;margin:2px 0;">${db.settings.address}</p>
                     <div style="font-size:14px;font-weight:bold;margin-top:6px;background:#e5e7eb;padding:4px;border:1px solid #888;">
-                        নগদান বই (Cash Book): ${bnMonths[month]} ${year}
+                        নগদান বই (Cash & Bank Book): ${bnMonths[month]} ${toBnDigits(year)}
                     </div>
                 </div>
-                <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:30px;">
+                <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:18px;">
                     <thead>
                         <tr style="background:#f3f4f6;">
-                            <th style="border:1px solid #555;padding:6px;text-align:left;">তারিখ</th>
-                            <th style="border:1px solid #555;padding:6px;text-align:left;">বিবরণ</th>
-                            <th style="border:1px solid #555;padding:6px;text-align:right;">নগদ জমা</th>
-                            <th style="border:1px solid #555;padding:6px;text-align:right;">নগদ খরচ</th>
-                            <th style="border:1px solid #555;padding:6px;text-align:right;">নগদ স্থিতি</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:center;">ক্রমিক</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:left;">বিবরণ</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:right;">ক্যাশ প্রাপ্তি</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:right;">ব্যাংক প্রাপ্তি</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:right;">ক্যাশ প্রদান</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:right;">ব্যাংক প্রদান</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:right;">ক্যাশ জের</th>
+                            <th style="border:1px solid #555;padding:5px;text-align:right;">ব্যাংক জের</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr style="font-weight:bold;background:#fefce8;">
-                            <td style="border:1px solid #555;padding:5px;">${year}-${String(month + 1).padStart(2, '0')}-01</td>
-                            <td style="border:1px solid #555;padding:5px;">প্রারম্ভিক হাতে নগদ</td>
-                            <td style="border:1px solid #555;padding:5px;text-align:right;">-</td>
-                            <td style="border:1px solid #555;padding:5px;text-align:right;">-</td>
-                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(st.opening)}</td>
+                            <td style="border:1px solid #555;padding:4px;text-align:center;">১</td>
+                            <td style="border:1px solid #555;padding:4px;">শুরুর জের (গত মাস থেকে)</td>
+                            <td style="border:1px solid #555;padding:4px;text-align:right;">${cb.openingCash > 0 ? formatBDT(cb.openingCash) : ''}</td>
+                            <td style="border:1px solid #555;padding:4px;text-align:right;">${cb.openingBank > 0 ? formatBDT(cb.openingBank) : ''}</td>
+                            <td style="border:1px solid #555;padding:4px;text-align:right;"></td>
+                            <td style="border:1px solid #555;padding:4px;text-align:right;"></td>
+                            <td style="border:1px solid #555;padding:4px;text-align:right;">${formatBDT(cb.openingCash)}</td>
+                            <td style="border:1px solid #555;padding:4px;text-align:right;">${formatBDT(cb.openingBank)}</td>
                         </tr>
                         ${rowsHtml}
                         <tr style="font-weight:bold;background:#e5e7eb;">
-                            <td colspan="2" style="border:1px solid #555;padding:6px;">সমাপনী হাতে নগদ (Closing Cash)</td>
-                            <td style="border:1px solid #555;padding:6px;text-align:right;">${formatBDT(st.totalCr)}</td>
-                            <td style="border:1px solid #555;padding:6px;text-align:right;">${formatBDT(st.totalDr)}</td>
-                            <td style="border:1px solid #555;padding:6px;text-align:right;">${formatBDT(st.closing)}</td>
+                            <td style="border:1px solid #555;padding:5px;"></td>
+                            <td style="border:1px solid #555;padding:5px;">মোট</td>
+                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.sumCashIn)}</td>
+                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.sumBankIn)}</td>
+                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.sumCashOut)}</td>
+                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.sumBankOut)}</td>
+                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.closingCash)}</td>
+                            <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.closingBank)}</td>
                         </tr>
                     </tbody>
                 </table>
+                <table style="width:55%;border-collapse:collapse;font-size:12px;font-weight:bold;">
+                    <tr>
+                        <td style="border:1px solid #555;padding:5px;background:#f3f4f6;">বর্তমান হাতে নগদ (ক্যাশ)</td>
+                        <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.closingCash)}</td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #555;padding:5px;background:#f3f4f6;">বর্তমান ব্যাংক জমা</td>
+                        <td style="border:1px solid #555;padding:5px;text-align:right;">${formatBDT(cb.closingBank)}</td>
+                    </tr>
+                </table>
             `;
 
-            const filename = `CashBook_${year}_${month + 1}.pdf`;
+            const filename = `Cash_Bank_Book_${year}_${month + 1}.pdf`;
             try {
                 const pdfBlob = await generateCleanPDFBlob(printArea, filename);
                 await triggerMobileDownload(pdfBlob, filename);
@@ -2126,6 +2624,218 @@ ${savedLocation}`);
             } finally {
                 btn.innerHTML = orig;
                 btn.disabled = false;
+            }
+        }
+
+        // ==================== CHANDA SUMMARY SHEET & STAFF HONORARIUM/ADVANCE REGISTERS ====================
+        function renderChandaSummarySheet() {
+            const tbody = document.getElementById('chanda-sheet-tbody');
+            const bariSel = document.getElementById('chanda-sheet-bari');
+            const yearEl = document.getElementById('chanda-sheet-year');
+            if (!tbody || !yearEl) return;
+
+            const year = String(yearEl.value || '2027');
+            const uniqueBaris = Array.from(new Set(db.members.map(m => m.bari || 'সাধারণ')));
+            if (bariSel && bariSel.options.length <= 1) {
+                bariSel.innerHTML = `<option value="">সকল বাড়ী (${toBnDigits(db.members.length)} জন)</option>` +
+                    uniqueBaris.map(b => `<option value="${b}">${b}</option>`).join('');
+            }
+
+            const q = (document.getElementById('chanda-sheet-search')?.value || '').trim();
+            const bariFilter = bariSel ? bariSel.value : '';
+
+            // Build lookup: memberId -> monthIdx -> totalPaid
+            const memPayments = {};
+            db.transactions.forEach(t => {
+                if (t.type === 'income' && t.memberId && String(t.chandaYear) === year) {
+                    if (!memPayments[t.memberId]) memPayments[t.memberId] = {};
+                    if (Array.isArray(t.chandaMonths) && t.chandaMonths.length > 0) {
+                        const perM = t.avgPerMonth || (t.amount / t.chandaMonths.length);
+                        t.chandaMonths.forEach(mIdx => {
+                            memPayments[t.memberId][mIdx] = (memPayments[t.memberId][mIdx] || 0) + perM;
+                        });
+                    }
+                }
+            });
+
+            const filtered = db.members.filter(m => {
+                const okBari = !bariFilter || (m.bari || 'সাধারণ') === bariFilter;
+                const okQ = !q || matchesNumberQuery(m.sl, q) || String(m.name).toLowerCase().includes(q.toLowerCase()) || String(m.bari || '').toLowerCase().includes(q.toLowerCase());
+                return okBari && okQ;
+            });
+
+            const defaultRate = Number(db.settings.defaultChandaRate || 100);
+            let grandTotal = 0;
+
+            tbody.innerHTML = filtered.map(m => {
+                const rate = m.fixed > 0 ? m.fixed : defaultRate;
+                const pMap = memPayments[m.id] || {};
+                let rowSum = 0;
+                const monthCells = [];
+                for (let idx = 0; idx < 12; idx++) {
+                    const val = pMap[idx] || 0;
+                    rowSum += val;
+                    monthCells.push(
+                        val > 0
+                            ? `<td class="p-1.5 border-r text-center bg-emerald-50 font-bold text-emerald-800">${toBnDigits(val)}</td>`
+                            : `<td class="p-1.5 border-r text-center text-gray-300">-</td>`
+                    );
+                }
+                grandTotal += rowSum;
+                return `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="p-1.5 border-r font-bold text-emerald-900">${toBnDigits(m.sl)}</td>
+                        <td class="p-1.5 border-r">
+                            <span class="font-semibold text-gray-800 block whitespace-nowrap">${m.name}</span>
+                            <span class="text-[9.5px] text-gray-500">${m.bari || 'সাধারণ'}</span>
+                        </td>
+                        <td class="p-1.5 border-r text-right whitespace-nowrap">
+                            <button type="button" onclick="editMemberFixedFromSheet('${m.id}')" class="underline font-bold text-indigo-700">${toBnDigits(rate)} ✏️</button>
+                        </td>
+                        ${monthCells.join('')}
+                        <td class="p-1.5 text-right font-bold text-emerald-950 bg-emerald-50/70">${formatBDT(rowSum)}</td>
+                    </tr>
+                `;
+            }).join('') + `
+                <tr class="bg-emerald-100 font-bold">
+                    <td colspan="15" class="p-2 border-r text-emerald-950">সর্বমোট আদায় (${toBnDigits(filtered.length)} জন সদস্য)</td>
+                    <td class="p-2 text-right text-emerald-950">${formatBDT(grandTotal)}</td>
+                </tr>
+            `;
+        }
+
+        function editMemberFixedFromSheet(memId) {
+            const m = db.members.find(x => x.id === memId);
+            if (!m) return;
+            const cur = m.fixed > 0 ? m.fixed : Number(db.settings.defaultChandaRate || 100);
+            const inp = prompt(`${m.name} এর মাসিক ধার্য্য চাঁদা (টাকা):`, cur);
+            if (inp !== null && !isNaN(parseFloat(inp))) {
+                m.fixed = parseFloat(inp);
+                saveDB();
+                renderChandaSummarySheet();
+            }
+        }
+
+        function exportChandaSheetExcel() {
+            if (typeof XLSX === 'undefined') { alert('Excel লাইব্রেরি লোড হয়নি।'); return; }
+            const year = String(document.getElementById('chanda-sheet-year')?.value || '2027');
+            const defaultRate = Number(db.settings.defaultChandaRate || 100);
+
+            const memPayments = {};
+            db.transactions.forEach(t => {
+                if (t.type === 'income' && t.memberId && String(t.chandaYear) === year) {
+                    if (!memPayments[t.memberId]) memPayments[t.memberId] = {};
+                    if (Array.isArray(t.chandaMonths) && t.chandaMonths.length > 0) {
+                        const perM = t.avgPerMonth || (t.amount / t.chandaMonths.length);
+                        t.chandaMonths.forEach(mIdx => {
+                            memPayments[t.memberId][mIdx] = (memPayments[t.memberId][mIdx] || 0) + perM;
+                        });
+                    }
+                }
+            });
+
+            const header = ['ক্র.নং', 'নাম', 'বাড়ী', 'ধার্য্য', ...bnMonths, 'মোট আদায়'];
+            const rows = [header];
+            db.members.forEach(m => {
+                const rate = m.fixed > 0 ? m.fixed : defaultRate;
+                const pMap = memPayments[m.id] || {};
+                let sum = 0;
+                const mVals = [];
+                for (let idx = 0; idx < 12; idx++) {
+                    const v = pMap[idx] || 0;
+                    sum += v;
+                    mVals.push(v);
+                }
+                rows.push([m.sl, m.name, m.bari || 'সাধারণ', rate, ...mVals, sum]);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, `Chanda_${year}`);
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            triggerMobileDownload(blob, `Baytun_Najat_Chanda_${year}.xlsx`);
+        }
+
+        function renderCurrentStaffLedger() {
+            const roleMap = {
+                imam: { catId: 'exp_1', title: 'ইমাম সাহেবের সম্মানী ও অগ্রিম খাতা', keyword: 'ইমাম' },
+                muazzin: { catId: 'exp_2', title: 'মুয়াজ্জিন সাহেবের সম্মানী ও অগ্রিম খাতা', keyword: 'মুয়াজ্জিন' },
+                khatib: { catId: 'exp_3', title: 'খতিব সাহেবের সম্মানী ও অগ্রিম খাতা', keyword: 'খতিব' }
+            };
+            const cfg = roleMap[activeStaffRole] || roleMap.imam;
+            const year = String(document.getElementById('staff-panel-year')?.value || new Date().getFullYear());
+
+            document.getElementById('staff-panel-title').innerText = cfg.title;
+
+            // Match transactions belonging to this staff category
+            const matchedTx = db.transactions.filter(t => {
+                if (t.type !== 'expense') return false;
+                const cat = db.categories.find(c => c.id === t.categoryId);
+                const isRoleCat = t.categoryId === cfg.catId || (cat && cat.name.includes(cfg.keyword));
+                if (!isRoleCat) return false;
+                const txYear = t.targetYear ? String(t.targetYear) : t.date.slice(0, 4);
+                return txYear === year;
+            });
+
+            const latestWithName = [...matchedTx].reverse().find(t => t.recipientName || t.note);
+            document.getElementById('staff-panel-recipient').innerText = `সর্বশেষ নাম: ${latestWithName ? (latestWithName.recipientName || latestWithName.note) : 'নির্ধারিত নেই'}`;
+
+            let totalReg = 0, totalAdv = 0;
+            const monthStats = Array.from({ length: 12 }, () => ({ regAmt: 0, advAmt: 0, advCount: 0 }));
+
+            matchedTx.forEach(t => {
+                const mIdx = (t.targetMonth !== undefined && t.targetMonth !== '') ? parseInt(t.targetMonth, 10) : (parseInt(t.date.slice(5, 7), 10) - 1);
+                if (t.isAdvance) {
+                    totalAdv += t.amount;
+                    if (monthStats[mIdx]) {
+                        monthStats[mIdx].advAmt += t.amount;
+                        monthStats[mIdx].advCount += 1;
+                    }
+                } else {
+                    totalReg += t.amount;
+                    if (monthStats[mIdx]) {
+                        monthStats[mIdx].regAmt += t.amount;
+                    }
+                }
+            });
+
+            document.getElementById('staff-total-regular').innerText = formatBDT(totalReg);
+            document.getElementById('staff-total-advance').innerText = formatBDT(totalAdv);
+            document.getElementById('staff-total-all').innerText = formatBDT(totalReg + totalAdv);
+
+            document.getElementById('staff-months-tbody').innerHTML = bnMonths.map((mName, idx) => {
+                const st = monthStats[idx];
+                const rowTot = st.regAmt + st.advAmt;
+                return `
+                    <tr class="border-b border-gray-200">
+                        <td class="p-2 border-r font-semibold">${mName}</td>
+                        <td class="p-2 border-r text-right text-emerald-800 font-medium">${st.regAmt > 0 ? formatBDT(st.regAmt) : '-'}</td>
+                        <td class="p-2 border-r text-center">
+                            ${st.advCount > 0 ? `<span class="bg-amber-100 text-amber-950 px-1.5 py-0.5 rounded font-bold">${toBnDigits(st.advCount)} বার (${formatBDT(st.advAmt)})</span>` : '-'}
+                        </td>
+                        <td class="p-2 text-right font-bold">${rowTot > 0 ? formatBDT(rowTot) : '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const txListEl = document.getElementById('staff-tx-list');
+            if (!matchedTx.length) {
+                txListEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-3">নির্বাচিত বছরে কোনো এন্ট্রি পাওয়া যায়নি।</p>';
+            } else {
+                txListEl.innerHTML = matchedTx.sort((a, b) => b.date.localeCompare(a.date)).map(t => `
+                    <div class="p-2 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-gray-800">${t.date}</span>
+                            ${t.isAdvance ? '<span class="ml-1 text-[10px] bg-amber-200 text-amber-950 px-1.5 py-0.5 rounded font-bold">অগ্রিম</span>' : '<span class="ml-1 text-[10px] bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-bold">সম্মানী</span>'}
+                            <span class="block text-[11px] text-gray-600">${t.note || ''}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-rose-800">${formatBDT(t.amount)}</span>
+                            <button onclick="openEditModal('tx', '${t.id}')" class="bg-white border px-2 py-0.5 rounded text-[10px] font-bold">✏️</button>
+                        </div>
+                    </div>
+                `).join('');
             }
         }
 
@@ -2335,7 +3045,8 @@ ${savedLocation}`);
 
             db.transactions.forEach(t => {
                 if (t.type === 'income' && t.receiptNo) {
-                    const pNum = parseInt(String(t.receiptNo).replace(/\D/g, ''));
+                    const norm = normalizeDigitsForSearch(String(t.receiptNo).replace(/[^0-9০-৯]/g, ''));
+                    const pNum = norm.numericVal !== null ? parseInt(norm.numericVal, 10) : NaN;
                     if (pNum >= book.startPage && pNum <= book.endPage && !existingMap.has(pNum)) {
                         existingMap.set(pNum, {
                             id: t.id,
@@ -2576,54 +3287,10 @@ ${savedLocation}`);
         }
 
         // ==================== DIRECT INCOME, EXPENSE & CASH-BANK SAVE ====================
-        function handleDirectReceiptLookup() {
-            const rawVal = document.getElementById('inc-receipt-no').value.trim();
-            const box = document.getElementById('inc-receipt-lookup-box');
-            const amtInput = document.getElementById('inc-amount');
-
-            if (!rawVal) {
-                box.classList.add('hidden');
-                return;
-            }
-
-            const numPage = parseInt(rawVal.replace(/\D/g, ''));
-            const matchedBook = !isNaN(numPage) ? findBookByPageNumber(numPage) : null;
-            const existingRec = findExistingReceiptRecord(rawVal, matchedBook ? matchedBook.id : null);
-
-            if (matchedBook) {
-                document.getElementById('inc-category').value = matchedBook.categoryId;
-                handleIncomeCategoryChange();
-            }
-
-            const catName = matchedBook
-                ? (db.categories.find(c => c.id === matchedBook.categoryId)?.name || '')
-                : '';
-
-            if (existingRec) {
-                box.classList.remove('hidden');
-                box.className = 'p-2.5 rounded-lg text-xs border bg-amber-50 border-amber-400 text-amber-950 space-y-1';
-                amtInput.value = existingRec.amount;
-                box.innerHTML = `
-                    <div class="font-bold text-rose-700 flex items-center gap-1">
-                        ⚠️ সতর্কতা: এই রশিদ নং-এ আগে থেকেই এন্ট্রি দেওয়া আছে!
-                    </div>
-                    <div>
-                        ${matchedBook ? `বই নং: <strong>বই-${matchedBook.bookNo}</strong> (${catName}) | ` : ''}
-                        আগের পরিমাণ: <strong>${existingRec.voided ? 'বাতিল পাতা' : formatBDT(existingRec.amount)}</strong> (তারিখ: ${existingRec.date})
-                    </div>
-                `;
-            } else if (matchedBook) {
-                box.classList.remove('hidden');
-                box.className = 'p-2.5 rounded-lg text-xs border bg-emerald-50 border-emerald-300 text-emerald-950';
-                box.innerHTML = `📘 অটো শনাক্ত: <strong>বই-${matchedBook.bookNo}</strong> | খাত: <strong>${catName}</strong> (পৃষ্ঠা রেঞ্জ: ${matchedBook.startPage}-${matchedBook.endPage})`;
-            } else {
-                box.classList.add('hidden');
-            }
-        }
-
         function saveDirectIncome() {
             const date = document.getElementById('inc-date').value;
             const receiptNo = document.getElementById('inc-receipt-no').value.trim();
+            const bookNoInput = document.getElementById('inc-book-no').value.trim();
             const categoryId = document.getElementById('inc-category').value;
             const amount = parseFloat(document.getElementById('inc-amount').value);
             const mode = document.getElementById('inc-mode').value;
@@ -2662,9 +3329,9 @@ ${savedLocation}`);
                 }
                 chandaYear = document.getElementById('inc-chanda-year').value;
                 avgPerMonth = Math.round((amount / chandaMonths.length) * 100) / 100;
-                memberName = `[${mem.sl}] ${mem.name} (${mem.bari || 'সাধারণ'})`;
+                memberName = `[${toBnDigits(mem.sl)}] ${mem.name} (${mem.bari || 'সাধারণ'})`;
                 const monthNames = chandaMonths.map(idx => bnMonths[idx]).join(', ');
-                chandaPeriod = `${monthNames} ${chandaYear} (গড়: ${formatBDT(avgPerMonth)}/মাস)`;
+                chandaPeriod = `${monthNames} ${toBnDigits(chandaYear)} (গড়: ${formatBDT(avgPerMonth)}/মাস)`;
             }
 
             if (receiptNo) {
@@ -2678,8 +3345,10 @@ ${savedLocation}`);
                 }
             }
 
-            const numPage = receiptNo ? parseInt(receiptNo.replace(/\D/g, '')) : NaN;
+            const normPage = normalizeDigitsForSearch(receiptNo.replace(/[^0-9০-৯]/g, ''));
+            const numPage = normPage.numericVal !== null ? parseInt(normPage.numericVal, 10) : NaN;
             const matchedBook = !isNaN(numPage) ? findBookByPageNumber(numPage) : null;
+            const finalBookNo = bookNoInput || (matchedBook ? toBnDigits(matchedBook.bookNo) : '');
 
             const combinedParts = [
                 memberName ? `সদস্য: ${memberName}` : '',
@@ -2691,8 +3360,8 @@ ${savedLocation}`);
                 id: 'tx_' + Date.now(),
                 type: 'income',
                 date,
-                receiptNo,
-                bookNo: matchedBook ? matchedBook.bookNo : '',
+                receiptNo: receiptNo ? toBnDigits(receiptNo) : '',
+                bookNo: finalBookNo,
                 categoryId,
                 memberId,
                 chandaMonths,
@@ -2709,7 +3378,6 @@ ${savedLocation}`);
             document.getElementById('inc-amount').value = '';
             document.getElementById('inc-note').value = '';
             clearSelectedChandaMember();
-            document.getElementById('inc-receipt-lookup-box').classList.add('hidden');
             alert('সরাসরি আয় সংরক্ষিত হয়েছে!');
         }
 
@@ -2717,11 +3385,13 @@ ${savedLocation}`);
             const date = document.getElementById('exp-date').value;
             const voucherNo = document.getElementById('exp-voucher').value.trim();
             const categoryId = document.getElementById('exp-category').value;
+            const targetMonth = document.getElementById('exp-target-month').value;
+            const targetYear = document.getElementById('exp-target-year').value;
             const amount = parseFloat(document.getElementById('exp-amount').value);
             const mode = document.getElementById('exp-mode').value;
             const bankId = mode === 'bank' ? document.getElementById('exp-bank-id').value : '';
             const isAdvance = document.getElementById('exp-is-advance').checked;
-            const note = document.getElementById('exp-note').value.trim();
+            const rawRecipient = document.getElementById('exp-note').value.trim();
 
             if (!date || isNaN(amount) || amount <= 0) {
                 alert('সঠিক তারিখ ও খরচের পরিমাণ লিখুন।');
@@ -2732,17 +3402,23 @@ ${savedLocation}`);
                 return;
             }
 
+            const periodTag = targetMonth !== '' ? `[${bnMonths[parseInt(targetMonth, 10)]} ${toBnDigits(targetYear)}]` : '';
+            const fullNote = [rawRecipient, periodTag].filter(Boolean).join(' ');
+
             db.transactions.push({
                 id: 'tx_' + Date.now(),
                 type: 'expense',
                 date,
                 voucherNo,
                 categoryId,
+                targetMonth,
+                targetYear,
+                recipientName: rawRecipient,
                 amount,
                 mode,
                 bankId,
                 isAdvance,
-                note
+                note: fullNote
             });
             saveDB();
             document.getElementById('exp-voucher').value = '';
@@ -2781,7 +3457,49 @@ ${savedLocation}`);
             alert('লেনদেন সফলভাবে সেভ হয়েছে!');
         }
 
-        // ==================== SETTINGS: BANKS, MEMBERS & CATEGORIES ====================
+        // ==================== SETTINGS TAB (MOVED TO BOTTOM NAV) ====================
+        function loadSettingsTabValues() {
+            document.getElementById('set-mosque-name').value = db.settings.mosqueName;
+            document.getElementById('set-mosque-address').value = db.settings.address;
+            document.getElementById('set-open-cash').value = db.settings.openingCash;
+            document.getElementById('set-default-chanda').value = db.settings.defaultChandaRate !== undefined ? db.settings.defaultChandaRate : 100;
+            renderSettingsBanksList();
+            renderSettingsMembersList();
+            renderSettingsCategoryLists();
+        }
+
+        function switchSettingsSub(sub) {
+            ['general', 'members', 'income_cats', 'expense_cats', 'backup'].forEach(s => {
+                document.getElementById('ssub-' + s).classList.add('hidden');
+                document.getElementById('ssub-btn-' + s).className = 'py-1.5 rounded text-gray-600';
+            });
+            document.getElementById('ssub-' + sub).classList.remove('hidden');
+            document.getElementById('ssub-btn-' + sub).className = 'py-1.5 rounded bg-white text-emerald-800 shadow-sm';
+            if (sub === 'members') renderSettingsMembersList();
+            if (sub === 'income_cats' || sub === 'expense_cats') renderSettingsCategoryLists();
+        }
+
+        function saveMosqueSettings() {
+            db.settings.mosqueName = document.getElementById('set-mosque-name').value.trim() || 'বায়তুন নাজাত জামে মসজিদ';
+            db.settings.address = document.getElementById('set-mosque-address').value.trim();
+            db.settings.openingCash = parseFloat(document.getElementById('set-open-cash').value) || 0;
+            db.settings.defaultChandaRate = parseFloat(document.getElementById('set-default-chanda').value) || 100;
+
+            document.querySelectorAll('.set-bank-open-input').forEach(inp => {
+                const bId = inp.dataset.bankOpenId;
+                const bank = db.banks.find(x => x.id === bId);
+                if (bank) bank.openingBalance = parseFloat(inp.value) || 0;
+            });
+
+            saveDB();
+            document.getElementById('header-mosque-name').innerText = db.settings.mosqueName;
+            refreshAllDropdowns();
+            renderDashboard();
+            renderCashBook();
+            renderMonthlyStatement();
+            alert('✅ সেটিংস সংরক্ষিত হয়েছে!');
+        }
+
         function addBankFromSettings() {
             const name = document.getElementById('set-new-bank-name').value.trim();
             const accountNo = document.getElementById('set-new-bank-acc').value.trim();
@@ -2837,19 +3555,9 @@ ${savedLocation}`);
             `).join('');
         }
 
-        function switchSettingsSub(sub) {
-            ['general', 'members', 'income_cats', 'expense_cats'].forEach(s => {
-                document.getElementById('ssub-' + s).classList.add('hidden');
-                document.getElementById('ssub-btn-' + s).className = 'py-1.5 rounded text-gray-600';
-            });
-            document.getElementById('ssub-' + sub).classList.remove('hidden');
-            document.getElementById('ssub-btn-' + sub).className = 'py-1.5 rounded bg-white text-emerald-800 shadow-sm';
-            if (sub === 'members') renderSettingsMembersList();
-            if (sub === 'income_cats' || sub === 'expense_cats') renderSettingsCategoryLists();
-        }
-
         function addChandaMember() {
-            const sl = document.getElementById('set-mem-sl').value.trim() || String(db.members.length + 1);
+            const rawSl = document.getElementById('set-mem-sl').value.trim();
+            const sl = rawSl ? toBnDigits(rawSl) : toBnDigits(db.members.length + 1);
             const name = document.getElementById('set-mem-name').value.trim();
             const bari = document.getElementById('set-mem-bari').value.trim() || 'সাধারণ';
             const fixed = parseFloat(document.getElementById('set-mem-fixed').value) || 0;
@@ -2892,20 +3600,20 @@ ${savedLocation}`);
             const el = document.getElementById('settings-members-list');
             const totalBadge = document.getElementById('set-members-total');
             if (!el) return;
-            if (totalBadge) totalBadge.innerText = `মোট: ${db.members.length} জন`;
+            if (totalBadge) totalBadge.innerText = `মোট: ${toBnDigits(db.members.length)} জন`;
 
-            const q = (document.getElementById('set-mem-search')?.value || '').trim().toLowerCase();
+            const q = (document.getElementById('set-mem-search')?.value || '').trim();
             const list = db.members.filter(m =>
                 !q ||
-                String(m.sl).toLowerCase().includes(q) ||
-                String(m.name).toLowerCase().includes(q) ||
-                String(m.bari || '').toLowerCase().includes(q)
+                matchesNumberQuery(m.sl, q) ||
+                String(m.name).toLowerCase().includes(q.toLowerCase()) ||
+                String(m.bari || '').toLowerCase().includes(q.toLowerCase())
             );
 
             el.innerHTML = list.map(m => `
                 <div class="p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs flex justify-between items-center gap-2">
                     <div>
-                        <span class="font-bold text-emerald-900">[${m.sl}] ${m.name}</span>
+                        <span class="font-bold text-emerald-900">[${toBnDigits(m.sl)}] ${m.name}</span>
                         <span class="block text-[10.5px] text-gray-500">${m.bari || 'সাধারণ'}${m.fixed > 0 ? ' • ধার্য্য: ' + formatBDT(m.fixed) : ''}</span>
                     </div>
                     <div class="flex gap-1 shrink-0">
@@ -2919,10 +3627,7 @@ ${savedLocation}`);
         function importChandaExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (typeof XLSX === 'undefined') {
-                alert('Excel লাইব্রেরি লোড হয়নি।');
-                return;
-            }
+            if (typeof XLSX === 'undefined') { alert('Excel লাইব্রেরি লোড হয়নি।'); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -2943,7 +3648,7 @@ ${savedLocation}`);
                         } else if (c0 && c1) {
                             parsed.push({
                                 id: 'mem_' + Date.now() + '_' + parsed.length,
-                                sl: c0,
+                                sl: toBnDigits(c0),
                                 name: c1,
                                 bari: curBari,
                                 fixed: c2
@@ -3108,7 +3813,7 @@ ${savedLocation}`);
             return { bookSummaries, vouchers };
         }
 
-        // ==================== METRICS & DASHBOARD ====================
+        // ==================== METRICS & DASHBOARD (NO "এই মাসের লেনদেন সমূহ") ====================
         function getMonthlyMetrics(year, month) {
             const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
             const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-31`;
@@ -3201,7 +3906,7 @@ ${savedLocation}`);
             const year = parseInt(document.getElementById('dash-year').value);
             const m = getMonthlyMetrics(year, month);
 
-            document.getElementById('dash-selected-label').innerText = `${bnMonths[month]} ${year}`;
+            document.getElementById('dash-selected-label').innerText = `${bnMonths[month]} ${toBnDigits(year)}`;
             document.getElementById('dash-month-income').innerText = formatBDT(m.monthIncome);
             document.getElementById('dash-month-expense').innerText = formatBDT(m.monthExpense);
             
@@ -3235,7 +3940,7 @@ ${savedLocation}`);
             const voucherTotalAmt = bvSum.vouchers.reduce((s, v) => s + v.amount, 0);
 
             if (bvSub) {
-                bvSub.innerHTML = `বই: <strong class="text-emerald-800">${bvSum.bookSummaries.length}টি (${formatBDT(bookTotalAmt)})</strong> | ভাউচার: <strong class="text-rose-800">${bvSum.vouchers.length}টি (${formatBDT(voucherTotalAmt)})</strong>`;
+                bvSub.innerHTML = `বই: <strong class="text-emerald-800">${toBnDigits(bvSum.bookSummaries.length)}টি (${formatBDT(bookTotalAmt)})</strong> | ভাউচার: <strong class="text-rose-800">${toBnDigits(bvSum.vouchers.length)}টি (${formatBDT(voucherTotalAmt)})</strong>`;
             }
 
             if (bvSum.bookSummaries.length === 0 && bvSum.vouchers.length === 0) {
@@ -3287,7 +3992,7 @@ ${savedLocation}`);
                     bvHtml += `
                         <div class="space-y-1.5 pt-1">
                             <div class="flex justify-between items-center">
-                                <span class="font-bold text-rose-800 text-[11px]">২। ব্যয় ভাউচার বিবরণী (${bvSum.vouchers.length}টি)</span>
+                                <span class="font-bold text-rose-800 text-[11px]">২। ব্যয় ভাউচার বিবরণী (${toBnDigits(bvSum.vouchers.length)}টি)</span>
                                 <span class="text-[10.5px] font-bold text-rose-900">মোট: ${formatBDT(voucherTotalAmt)}</span>
                             </div>
                             <div class="overflow-x-auto border border-gray-200 rounded-lg">
@@ -3326,83 +4031,8 @@ ${savedLocation}`);
 
                 bvBox.innerHTML = bvHtml;
             }
-
-            const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-            const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-31`;
-
-            const items = [];
-            db.receiptEntries.forEach(r => {
-                if (!r.voided && r.date >= startOfMonth && r.date <= endOfMonth) {
-                    const book = db.books.find(b => b.id === r.bookId);
-                    const cat = book ? db.categories.find(c => c.id === book.categoryId) : null;
-                    items.push({
-                        kind: 'receipt', id: r.id, date: r.date,
-                        title: `${cat ? cat.name : 'রশিদ আয়'} (বই-${book ? book.bookNo : ''}, রশিদ #${r.pageNo})`,
-                        amount: r.amount, badge: 'আয় (রশিদ)', badgeColor: 'bg-emerald-100 text-emerald-800', amtColor: 'text-emerald-700', extraBadge: ''
-                    });
-                }
-            });
-
-            db.transactions.forEach(t => {
-                if (t.date >= startOfMonth && t.date <= endOfMonth) {
-                    const cat = db.categories.find(c => c.id === t.categoryId);
-                    const bName = getBankName(t.bankId);
-                    if (t.type === 'income') {
-                        items.push({
-                            kind: 'tx', id: t.id, date: t.date,
-                            title: `${cat ? cat.name : 'সরাসরি আয়'} ${t.bookNo ? '[বই-' + t.bookNo + '] ' : ''}${t.receiptNo ? '[রশিদ: ' + t.receiptNo + ']' : ''} ${t.note ? '- ' + t.note : ''}`,
-                            amount: t.amount,
-                            badge: t.mode === 'bank' ? `আয় (${bName})` : 'আয় (ক্যাশ)',
-                            badgeColor: 'bg-emerald-100 text-emerald-800',
-                            amtColor: 'text-emerald-700',
-                            extraBadge: ''
-                        });
-                    } else if (t.type === 'expense') {
-                        items.push({
-                            kind: 'tx', id: t.id, date: t.date,
-                            title: `${cat ? cat.name : 'ব্যয়'} ${t.voucherNo ? '[ভাউচার: ' + t.voucherNo + ']' : ''} ${t.note ? '- ' + t.note : ''}`,
-                            amount: t.amount,
-                            badge: t.mode === 'bank' ? `ব্যয় (${bName})` : 'ব্যয় (ক্যাশ)',
-                            badgeColor: 'bg-rose-100 text-rose-800',
-                            amtColor: 'text-rose-700',
-                            extraBadge: t.isAdvance ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-950">অগ্রিম</span>' : ''
-                        });
-                    } else if (t.type === 'bank_transfer') {
-                        items.push({
-                            kind: 'tx', id: t.id, date: t.date,
-                            title: `${t.transferDir === 'cash_to_bank' ? `ক্যাশ থেকে ${bName}-এ জমা` : `${bName} থেকে উত্তোলন`} ${t.note ? '- ' + t.note : ''}`,
-                            amount: t.amount, badge: 'ক্যাশ-ব্যাংক', badgeColor: 'bg-indigo-100 text-indigo-800', amtColor: 'text-indigo-700', extraBadge: ''
-                        });
-                    }
-                }
-            });
-
-            items.sort((a, b) => b.date.localeCompare(a.date));
-            const listEl = document.getElementById('dash-tx-list');
-            if (!items.length) {
-                listEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">এই মাসে কোনো লেনদেন পাওয়া যায়নি।</p>';
-                return;
-            }
-
-            listEl.innerHTML = items.map(item => `
-                <div class="relative p-3 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-start gap-2">
-                    <div class="pr-14">
-                        <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${item.badgeColor}">${item.badge}</span>
-                            ${item.extraBadge}
-                            <span class="text-[11px] text-gray-500">${item.date}</span>
-                        </div>
-                        <p class="text-xs font-semibold text-gray-800">${item.title}</p>
-                        <p class="text-sm font-bold ${item.amtColor} mt-0.5">${formatBDT(item.amount)}</p>
-                    </div>
-                    <button onclick="openEditModal('${item.kind}', '${item.id}')" class="absolute top-2 right-2 bg-white hover:bg-amber-50 border border-gray-300 text-gray-700 px-2 py-1 rounded-lg text-[11px] font-bold shadow-sm">
-                        ✏️ Edit
-                    </button>
-                </div>
-            `).join('');
         }
 
-        // Optional Print / PDF for Book & Voucher Summary
         async function downloadBookSummaryPDF() {
             if (typeof html2pdf === 'undefined') { alert('PDF লাইব্রেরি লোড হয়নি।'); return; }
             const btn = document.getElementById('btn-book-sum-pdf');
@@ -3442,7 +4072,7 @@ ${savedLocation}`);
                     <h1 style="font-size:20px;font-weight:bold;margin:0;">${db.settings.mosqueName}</h1>
                     <p style="font-size:12px;margin:2px 0;">${db.settings.address}</p>
                     <div style="font-size:14px;font-weight:bold;margin-top:6px;background:#e5e7eb;padding:4px;border:1px solid #888;">
-                        মাসিক রশিদ বই ও ব্যয় ভাউচার সারসংক্ষেপ: ${bnMonths[month]} ${year}
+                        মাসিক রশিদ বই ও ব্যয় ভাউচার সারসংক্ষেপ: ${bnMonths[month]} ${toBnDigits(year)}
                     </div>
                 </div>
                 <div style="font-weight:bold;margin-bottom:6px;font-size:13px;">১। রশিদ বইভিত্তিক আদায় সারসংক্ষেপ</div>
@@ -3592,6 +4222,8 @@ ${savedLocation}`);
             renderDashboard();
             renderBookAudit();
             renderCashBook();
+            renderChandaSummarySheet();
+            renderCurrentStaffLedger();
             renderMonthlyStatement();
             renderCategoryLedger();
         }
@@ -3607,11 +4239,13 @@ ${savedLocation}`);
             renderDashboard();
             renderBookAudit();
             renderCashBook();
+            renderChandaSummarySheet();
+            renderCurrentStaffLedger();
             renderMonthlyStatement();
             renderCategoryLedger();
         }
 
-        // ==================== BANK STATEMENT STYLE MONTHLY VIEW ====================
+        // ==================== BANK STATEMENT STYLE MONTHLY VIEW (WITH EDIT BUTTON) ====================
         function getStatementData(accountFilter, year, month) {
             const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
             const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-31`;
@@ -3638,6 +4272,8 @@ ${savedLocation}`);
                     const book = db.books.find(b => b.id === r.bookId);
                     const cat = book ? db.categories.find(c => c.id === book.categoryId) : null;
                     monthRows.push({
+                        kind: 'receipt',
+                        id: r.id,
                         date: r.date,
                         desc: `${cat ? cat.name : 'রশিদ আদায়'} (বই-${book ? book.bookNo : ''}, রশিদ #${r.pageNo})`,
                         cr: r.amount,
@@ -3691,7 +4327,7 @@ ${savedLocation}`);
                 if (!relevant) return;
 
                 if (t.date < startOfMonth) opening += (cr - dr);
-                else if (t.date >= startOfMonth && t.date <= endOfMonth) monthRows.push({ date: t.date, desc, cr, dr });
+                else if (t.date >= startOfMonth && t.date <= endOfMonth) monthRows.push({ kind: 'tx', id: t.id, date: t.date, desc, cr, dr });
             });
 
             monthRows.sort((a, b) => a.date.localeCompare(b.date));
@@ -3731,12 +4367,13 @@ ${savedLocation}`);
                     <td class="p-2 border-r text-amber-900">প্রারম্ভিক জের (Opening Balance)</td>
                     <td class="p-2 border-r text-right">-</td>
                     <td class="p-2 border-r text-right">-</td>
-                    <td class="p-2 text-right text-amber-950">${formatBDT(st.opening)}</td>
+                    <td class="p-2 border-r text-right text-amber-950">${formatBDT(st.opening)}</td>
+                    <td class="p-2 text-center">-</td>
                 </tr>
             `;
 
             if (!st.rows.length) {
-                html += `<tr><td colspan="5" class="p-4 text-center text-gray-400">এই মাসে নির্বাচিত অ্যাকাউন্টে কোনো লেনদেন নেই।</td></tr>`;
+                html += `<tr><td colspan="6" class="p-4 text-center text-gray-400">এই মাসে নির্বাচিত অ্যাকাউন্টে কোনো লেনদেন নেই।</td></tr>`;
             } else {
                 html += st.rows.map(r => `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
@@ -3744,7 +4381,10 @@ ${savedLocation}`);
                         <td class="p-2 border-r font-medium text-gray-800">${r.desc}</td>
                         <td class="p-2 border-r text-right font-semibold text-emerald-700">${r.cr > 0 ? formatBDT(r.cr) : '-'}</td>
                         <td class="p-2 border-r text-right font-semibold text-rose-700">${r.dr > 0 ? formatBDT(r.dr) : '-'}</td>
-                        <td class="p-2 text-right font-bold text-gray-900">${formatBDT(r.balance)}</td>
+                        <td class="p-2 border-r text-right font-bold text-gray-900">${formatBDT(r.balance)}</td>
+                        <td class="p-2 text-center">
+                            <button onclick="openEditModal('${r.kind}', '${r.id}')" class="bg-white border border-gray-300 px-1.5 py-0.5 rounded text-[10px] font-bold">✏️</button>
+                        </td>
                     </tr>
                 `).join('');
             }
@@ -3754,7 +4394,8 @@ ${savedLocation}`);
                     <td colspan="2" class="p-2 border-r text-emerald-950">মাস শেষে সমাপনী জের (Closing Balance)</td>
                     <td class="p-2 border-r text-right text-emerald-800">${formatBDT(st.totalCr)}</td>
                     <td class="p-2 border-r text-right text-rose-800">${formatBDT(st.totalDr)}</td>
-                    <td class="p-2 text-right text-emerald-950">${formatBDT(st.closing)}</td>
+                    <td class="p-2 border-r text-right text-emerald-950">${formatBDT(st.closing)}</td>
+                    <td class="p-2"></td>
                 </tr>
             `;
             tbody.innerHTML = html;
@@ -3790,7 +4431,7 @@ ${savedLocation}`);
                     <h1 style="font-size:20px;font-weight:bold;margin:0;">${db.settings.mosqueName}</h1>
                     <p style="font-size:12px;margin:2px 0;">${db.settings.address}</p>
                     <div style="font-size:14px;font-weight:bold;margin-top:6px;background:#e5e7eb;padding:4px;border:1px solid #888;">
-                        মাসিক স্টেটমেন্ট: ${accountTitle} (${bnMonths[month]} ${year})
+                        মাসিক স্টেটমেন্ট: ${accountTitle} (${bnMonths[month]} ${toBnDigits(year)})
                     </div>
                 </div>
                 <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:30px;">
@@ -3908,50 +4549,12 @@ ${savedLocation}`);
             tbody.innerHTML = html;
             document.getElementById('yearly-table-foot').innerHTML = `
                 <tr>
-                    <td class="p-2 border">সর্বমোট (${year})</td>
+                    <td class="p-2 border">সর্বমোট (${toBnDigits(year)})</td>
                     <td class="p-2 border text-right text-emerald-800">${formatBDT(sumInc)}</td>
                     <td class="p-2 border text-right text-rose-800">${formatBDT(sumExp)}</td>
                     <td class="p-2 border text-right">${formatBDT(sumInc - sumExp)}</td>
                 </tr>
             `;
-        }
-
-        // ==================== SETTINGS MODAL ====================
-        function openMosqueModal() {
-            document.getElementById('set-mosque-name').value = db.settings.mosqueName;
-            document.getElementById('set-mosque-address').value = db.settings.address;
-            document.getElementById('set-open-cash').value = db.settings.openingCash;
-            document.getElementById('set-default-chanda').value = db.settings.defaultChandaRate !== undefined ? db.settings.defaultChandaRate : 100;
-            renderSettingsBanksList();
-            renderSettingsMembersList();
-            renderSettingsCategoryLists();
-            switchSettingsSub('general');
-            document.getElementById('mosque-modal').classList.remove('hidden');
-        }
-
-        function closeMosqueModal() {
-            document.getElementById('mosque-modal').classList.add('hidden');
-        }
-
-        function saveMosqueSettings() {
-            db.settings.mosqueName = document.getElementById('set-mosque-name').value.trim() || 'বায়তুন নাজাত জামে মসজিদ';
-            db.settings.address = document.getElementById('set-mosque-address').value.trim();
-            db.settings.openingCash = parseFloat(document.getElementById('set-open-cash').value) || 0;
-            db.settings.defaultChandaRate = parseFloat(document.getElementById('set-default-chanda').value) || 100;
-
-            document.querySelectorAll('.set-bank-open-input').forEach(inp => {
-                const bId = inp.dataset.bankOpenId;
-                const bank = db.banks.find(x => x.id === bId);
-                if (bank) bank.openingBalance = parseFloat(inp.value) || 0;
-            });
-
-            saveDB();
-            document.getElementById('header-mosque-name').innerText = db.settings.mosqueName;
-            closeMosqueModal();
-            refreshAllDropdowns();
-            renderDashboard();
-            renderCashBook();
-            renderMonthlyStatement();
         }
 
         // ==================== EXCEL, BACKUP & PDF ====================
@@ -4019,7 +4622,6 @@ ${savedLocation}`);
             reader.readAsText(file);
         }
 
-        // Monthly Report PDF with Fixed Viewport Alignment (No Left Clipping)
         async function downloadMonthlyPDF() {
             if (typeof html2pdf === 'undefined') { alert('PDF লাইব্রেরি লোড হয়নি।'); return; }
 
@@ -4073,7 +4675,7 @@ ${savedLocation}`);
                     <h1 style="font-size: 21px; font-weight: bold; margin: 0;">${db.settings.mosqueName}</h1>
                     <p style="font-size: 12px; margin: 2px 0;">${db.settings.address}</p>
                     <div style="font-size: 14px; font-weight: bold; margin-top: 6px; background: #e5e7eb; padding: 4px; border: 1px solid #999;">
-                        মাসিক আয়-ব্যয় ও তহবিল বিবরণী: ${bnMonths[month]} ${year}
+                        মাসিক আয়-ব্যয় ও তহবিল বিবরণী: ${bnMonths[month]} ${toBnDigits(year)}
                     </div>
                 </div>
 
